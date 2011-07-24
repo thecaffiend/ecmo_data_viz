@@ -1,4 +1,4 @@
-function render_pressure(div_id){
+function render_pressure_gauge(div_id){
 	var abs_min = 0
 	var abs_max = 100
 	var sp_min = 15

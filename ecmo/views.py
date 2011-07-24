@@ -10,3 +10,8 @@ import math
 def ecmo_main(request):
     return render_to_response('ecmo_main.html', {})
 
+def pressure_gauge_view(request):
+    return render_to_response('pressure_gauge_view.html', {})
+
+def trend_symbol_view(request):
+    return render_to_response('trend_symbol_view.html', {})
