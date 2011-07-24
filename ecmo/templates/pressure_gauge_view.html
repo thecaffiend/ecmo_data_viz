@@ -6,15 +6,12 @@
 {% endblock %}
 {% block extrahead %}
    	<script type="text/javascript" src="/static/js/render/render_pressure.js"></script>
-   	<script type="text/javascript" src="/static/js/render/render_trend_symbol.js"></script>
 {% endblock %}
 {% block content %}
 <script type="text/javascript">
 $(document).ready(function() {
 	render_pressure_gauge("bladder_pressure");
-	render_trend_symbol("symbol")
 });     		
 </script>
 <div id="bladder_pressure" style="float: left;"></div>
-<div id="symbol" style="float: left;"></div>
 {% endblock %}
