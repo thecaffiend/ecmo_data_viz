@@ -1,0 +1,17 @@
+{% extends "ecmo_base.html" %}
+{% block title %}ECMO main{% endblock %}
+{% block extrascript %}
+{% endblock %}
+{% block extrastyle %}
+{% endblock %}
+{% block extrahead %}
+   	<script type="text/javascript" src="/static/js/render/render_pressure.js"></script>
+{% endblock %}
+{% block content %}
+<script type="text/javascript">
+$(document).ready(function() {
+	render_pressure_graph("bladder_pressure");
+});     		
+</script>
+<div id="bladder_pressure" style="float: left;"></div>
+{% endblock %}

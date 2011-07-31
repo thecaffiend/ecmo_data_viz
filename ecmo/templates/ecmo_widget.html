@@ -1,0 +1,25 @@
+{% extends "ecmo_base.html" %}
+{% block title %}ECMO main{% endblock %}
+{% block extrascript %}
+{% endblock %}
+{% block extrastyle %}
+{% endblock %}
+{% block extrahead %}
+   	<script type="text/javascript" src="/static/js/render/render_widget_label.js"></script>
+   	<script type="text/javascript" src="/static/js/render/render_widget_graph.js"></script>
+   	<script type="text/javascript" src="/static/js/render/render_widget_trend.js"></script>
+{% endblock %}
+{% block content %}
+<script type="text/javascript">
+$(document).ready(function() {
+	render_widget_graph("main");
+	render_widget_trend("arrow");
+	render_widget_label('label')
+});     		
+</script>
+<div id="widget" class="widgetDiv">
+	<div id="label" class="widgetLabel"></div>
+	<div id="arrow" class="widgetArrow"></div>
+	<div id="main" class="widgetMain"></div>
+</div>
+{% endblock %}

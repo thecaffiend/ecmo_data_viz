@@ -5,16 +5,98 @@
 {% block extrastyle %}
 {% endblock %}
 {% block extrahead %}
-   	<script type="text/javascript" src="/static/js/render/render_pressure.js"></script>
-   	<script type="text/javascript" src="/static/js/render/render_trend_symbol.js"></script>
+   	<script type="text/javascript" src="/static/js/render/render_widget_label.js"></script>
+   	<script type="text/javascript" src="/static/js/render/render_widget_graph.js"></script>
+   	<script type="text/javascript" src="/static/js/render/render_widget_trend.js"></script>
 {% endblock %}
 {% block content %}
 <script type="text/javascript">
+
+// stuff from titan pad
+
+// $(document).ready(function(){
+    // $.get('/page/pumpside', function(conf){
+        // $.each(conf, function(idx, wc){
+            // var container = $('#'+wc.container),
+                // widget = $('<div/>',{
+                    // id: wc.div_id,
+                    // 'class': 'widget'
+                // })
+                // // loop over (title, trend, main)
+                // $.each(['title', 'trend', 'main'], function(idx, div_type){
+                    // $(widget).append($('<div/>',{
+                        // id: wc.div_id + '_' + div_type,
+                        // 'class': div_type
+                    // })
+                    // // generate the protovis pieces for (title, trend, main)
+                    // $.data(widget, 'pvs')[div] = widget_thing(div_type, wc.div_id + '_' + div_type)
+                // })
+//                 
+            // $.data(widget, 'series', [])
+//             
+            // var socket = $.websocket("ws://127.0.0.1:8080/", {
+                // events: {
+                    // message: function(e) {
+                        // $.each(wc.series, function(idx, series){
+                            // for(b=0;b<series.length;b++){
+                                // $.data(widget, 'series')[idx].push(series[b])
+                            // }
+                        // })
+                        // //redraw
+//                         
+                    // }
+                // }
+            // });
+        // })
+//         
+    // })
+// })
+
+// JSON format for configurations (list of widget conf's):
+// [{
+//	 container: '', // one of T,L,R,B (top, left, right, bottom)
+//   pos: '',       // numerical index of the widget in the container
+//   series: []     // list of series names this widget displays such as 'set_low_slow' or 'orders'
+//   div_id: '',    // id of the div containing the widget
+// },]
+
+var test_configs = [
+	{
+		"container": "T",
+		"pos": "1",
+		"series": ["measurement"],
+		"div_id": "premem_pressure",
+	},
+	{
+		"container": "R",
+		"pos": "1",
+		"series": ["orders", "measurement"],
+		"div_id": "postmem_pressure",
+	},
+	{
+		"container": "B",
+		"pos": "1",
+		"series": ["set_low_slow", "set_high_slow","set_low_stop", "set_high_stop","measurement"],
+		"div_id": "water_temp",
+	},
+	{
+		"container": "L",
+		"pos": "1",
+		"series": ["orders","measurement"],
+		"div_id": "svo2",
+	},
+]
+
 $(document).ready(function() {
-	render_pressure_gauge("bladder_pressure");
-	render_trend_symbol("symbol")
+	render_widget_graph("main");
+	render_widget_trend("arrow");
+	render_widget_label('label')
 });     		
 </script>
-<div id="bladder_pressure" style="float: left;"></div>
-<div id="symbol" style="float: left;"></div>
+<!-- after testing and getting this working, this will be replaced by a div generator function-->
+<div id="widget" class="widgetDiv">
+	<div id="label" class="widgetLabel"></div>
+	<div id="arrow" class="widgetArrow"></div>
+	<div id="main" class="widgetMain"></div>
+</div>
 {% endblock %}
