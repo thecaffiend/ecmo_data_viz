@@ -13,5 +13,11 @@ def ecmo_main(request):
 def pressure_gauge_view(request):
     return render_to_response('pressure_gauge_view.html', {})
 
+def pressure_graph_view(request):
+    return render_to_response('pressure_graph_view.html', {})
+
 def trend_symbol_view(request):
     return render_to_response('trend_symbol_view.html', {})
+
+def widget_view(request):
+    return render_to_response('ecmo_widget.html', {})
