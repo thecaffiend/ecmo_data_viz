@@ -1,28 +1,61 @@
-.widgetDiv{
+.widget{
 	height: 200px;
 	width: 300px;
 	float:left;
 	/*background-color: #FF0000;*/
 }
 
-.widgetLabel{
+.label{
 	height: 50px;
 	width: 225px;
 	float:left;
 	/*background-color: #FF0000;*/
 }
 
-.widgetArrow{
+.trend{
 	height: 50px;
 	width: 75px;
 	float:left;
 	/*background-color: #00FF00;*/
 }
 
-.widgetMain{
+.graph{
 	height: 150px;
 	width: 300px;
 	/*background-color: #0000FF;*/
 }
 
+.outer{
+	width:100%;
+	height:100%;
+}
 
+.widget_row{
+	width:1280px;
+	height:300px;
+	float:none;
+	/*background-color: #FF0000;*/
+	overflow:hidden;
+}
+
+.widget_col_left{
+	width:320px;
+	height:424px;
+	float:left;
+	/*background-color: #00FF00;*/
+}
+
+.widget_col_right{
+	width:320px;
+	height:424px;
+	/*background-color: #00FF00;*/
+	float:left;
+	overflow:hidden;
+}
+
+.viz_center{
+	width:640px;
+	height:424px;
+	float:left;
+	/*background-color: #0000FF;*/
+}
