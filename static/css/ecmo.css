@@ -1,0 +1,28 @@
+.widgetDiv{
+	height: 200px;
+	width: 300px;
+	float:left;
+	/*background-color: #FF0000;*/
+}
+
+.widgetLabel{
+	height: 50px;
+	width: 225px;
+	float:left;
+	/*background-color: #FF0000;*/
+}
+
+.widgetArrow{
+	height: 50px;
+	width: 75px;
+	float:left;
+	/*background-color: #00FF00;*/
+}
+
+.widgetMain{
+	height: 150px;
+	width: 300px;
+	/*background-color: #0000FF;*/
+}
+
+
