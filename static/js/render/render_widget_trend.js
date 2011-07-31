@@ -1,9 +1,9 @@
-var data = {
-		sp_max:100,
-		sp_min:0,
-		// current is the last datapaint
-		datapoints:_.range(10, 90, 10).concat(_.range(90,10, -10))
-	}
+// trend data is just for testing pre-backend
+var trend_data = {
+	sp_max:100,
+	sp_min:0,
+	datapoints:[],
+}
 
 var x_scale = null;
 var y_scale = null;
@@ -13,10 +13,10 @@ var y_scale = null;
 // or decreasing. Less than this number will be cosidered a flat trend
 var slope_tolerance = .5;
 
-function render_trend_symbol(div_id){
-	var h = $(document).height()
-	var w = $(document).width()
-	
+function render_widget_trend(div_id){
+	var h = $("#"+div_id).height()
+	var w = $("#"+div_id).width()
+
 	init_dataset()
 	
 	// square will always be half the available height. if there is a 
@@ -25,8 +25,8 @@ function render_trend_symbol(div_id){
 	// centers the square
 	var square_left = (w - half_height) / 2	
 	
-	var vals_x = _.pluck(data.dataset, 'x');
-	var vals_y = _.pluck(data.dataset, 'y');
+	var vals_x = _.pluck(trend_data.dataset, 'x');
+	var vals_y = _.pluck(trend_data.dataset, 'y');
 	var reg_slope = ls_regression_slope(vals_x, vals_y);
 	
 	var triangle_location = trend_direction(reg_slope)
@@ -36,7 +36,6 @@ function render_trend_symbol(div_id){
 	
 	var vis = new pv.Panel()
 		.canvas(div_id)
-		.strokeStyle('blue')
 		.height(function() {
 			return h
 		})
@@ -57,10 +56,10 @@ function render_trend_symbol(div_id){
 		})
 		.fillStyle(function(){
 			var last_value = vals_y[vals_y.length-1]
-			return (last_value < data.sp_max && last_value > data.sp_min) ? 'blue' : 'red'
+			return (last_value < trend_data.sp_max && last_value > trend_data.sp_min) ? 'blue' : 'red'
 		})
 		.size(function(){
-			return half_height * 115
+			return half_height * 10
 		})
 		.shape("triangle")
 		.angle(function(){
@@ -90,13 +89,13 @@ function render_trend_symbol(div_id){
 		.fillStyle(function(){
 			var last_value = vals_y[vals_y.length-1]
 			return triangle_exists ? 
-				((last_value < data.sp_max && last_value > data.sp_min) ? 'blue' : 'red') : 
+				((last_value < trend_data.sp_max && last_value > trend_data.sp_min) ? 'blue' : 'red') : 
 				'black'
 		})
 	
 	var graph_line = vis.add(pv.Line)
 		.data(function(){
-			return data.dataset
+			return trend_data.dataset
 		})
 		.interpolate('step-after')
 		.left(function(d){
@@ -105,26 +104,32 @@ function render_trend_symbol(div_id){
 		.top(function(d){
 			return y_scale(d.y)
 		})
-		.lineWidth(3)
+		.lineWidth(1)
 		.strokeStyle('white')
 		
 	vis.render()
 }
 
 function init_dataset(){
+	for (var i = 0; i < 20; i++){
+		// giving 20 on either side of the setpoints so we can get values 
+		// outside the allowed values
+		trend_data.datapoints.push(get_random(trend_data.sp_min - 20, trend_data.sp_max + 20))
+	}
+	
 	var i = 0;
-	data['dataset'] = _.map(data.datapoints, function(d){
+	trend_data['dataset'] = _.map(trend_data.datapoints, function(d){
 		return {x:i++, y:d}
 	})
 	
 }
 
 function init_scales(sq_left, tri_loc, half_height){
-	x_scale = pv.Scale.linear(data.dataset, function(d){return d.x}).range(sq_left, sq_left+half_height)
+	x_scale = pv.Scale.linear(trend_data.dataset, function(d){return d.x}).range(sq_left, sq_left+half_height)
 	
 	var sq_top = get_square_top(tri_loc, half_height)
 			
-	y_scale = pv.Scale.linear(data.dataset, function(d){return d.y}).range(sq_top, sq_top+half_height)
+	y_scale = pv.Scale.linear(trend_data.dataset, function(d){return d.y}).range(sq_top, sq_top+half_height)
 }
 
 function get_square_top(tri_loc, half_height){

@@ -1,3 +1,126 @@
+// DEPRECATED! 
+// only still here if we want the gauge type view
+
+var pressure_data = {
+	sps_high: make_array(20, 215).concat(make_array(20, 225)),
+	sps_low: make_array(20, 165).concat(make_array(20, 175)),
+	pressures: [],
+}
+
+var x_scale = null;
+var y_scale = null;
+
+// convenience function to create the pressures array. just for testing
+function init_pressures(num_items){
+	while(num_items--){
+		pressure_data.pressures.push(get_random(170, 225))
+	}
+}
+
+function render_pressure_graph(div_id){
+	var h = $("#"+div_id).height()
+	var w = $("#"+div_id).width()
+	
+	init_pressures(40)
+	
+	// take up 4/5 of the width with the setpoint and pressure lines
+	var sp_datapoint_step = (w-(w/5)) / pressure_data.sps_high.length;	
+	var p_datapoint_step = (w-(w/5)) / pressure_data.pressures.length;	
+	
+	// get the min and max values of the set points
+	var max_sp = _.max(pressure_data.sps_high)
+	var min_sp = _.min(pressure_data.sps_low)
+	var y_scale = pv.Scale.linear(max_sp, min_sp).range(15, h-15)
+	
+	var vis = new pv.Panel()
+		.canvas(div_id)
+		.height(function() {
+			return h
+		})
+		.width(function() {
+			return w
+		})
+		
+	var top_line = vis.add(pv.Rule)
+		.bottom(1)
+		.strokeStyle('black')
+		.lineWidth(2)
+	
+	var bottom_line = vis.add(pv.Rule)
+		.bottom(h-1)
+		.strokeStyle('black')
+		.lineWidth(2)
+	
+	var setpoint_top_line = vis.add(pv.Line)
+		.data(pressure_data.sps_high)
+		.top(function(d){
+			return y_scale(d)
+		})
+		.left(function(d){
+			return this.index * sp_datapoint_step
+		})
+		.strokeStyle('black')
+		.lineWidth(2)
+		.strokeDasharray("3, 5")
+	
+	vis.add(pv.Label)
+		.text(function(){
+			return ""+pressure_data.sps_high[pressure_data.sps_high.length - 1]
+		})
+		.textAlign("center")
+		.font('20px Verdana bold')
+		.textStyle('black')
+		.right(w/6)
+		.top(function(){
+			// add 10 to push the label down
+			return y_scale(pressure_data.sps_high[pressure_data.sps_high.length - 1]) + 10
+		})
+		
+		
+	var setpoint_bottom_line = vis.add(pv.Line)
+		.data(pressure_data.sps_low)
+		.top(function(d){
+			return y_scale(d)
+		})
+		.left(function(d){
+			return this.index * sp_datapoint_step
+		})
+		.strokeStyle('black')
+		.lineWidth(2)
+		.strokeDasharray("3,5")
+	
+	vis.add(pv.Label)
+		.text(function(){
+			return ""+pressure_data.sps_low[pressure_data.sps_low.length - 1]
+		})
+		.textAlign("center")
+		.font('20px Verdana bold')
+		.textStyle('black')
+		.right(w/6)
+		.top(function(){
+			// add 10 to push the label down
+			return y_scale(pressure_data.sps_low[pressure_data.sps_low.length - 1]) + 10
+		})
+		
+	var pressure_line = vis.add(pv.Line)
+		.data(pressure_data.pressures)
+		.top(function(d){
+			return y_scale(d)
+		})
+		.left(function(d){
+			return this.index * p_datapoint_step
+		})
+		.strokeStyle(function(d){
+			return "blue"
+			// this seems to only get evaluated for the first line segment...
+			//return (d < data.sps_high[this.index] && d > data.sps_low[this.index]) ? "blue" : "red"
+		})
+		.lineWidth(2)
+		
+	vis.render()
+	
+}
+
 function render_pressure_gauge(div_id){
 	var abs_min = 0
 	var abs_max = 100
@@ -23,20 +146,6 @@ function render_pressure_gauge(div_id){
 		.width(function() {
 			return w
 		})
-	// var invisi_bar = vis.add(pv.Bar)
-		// .top(function(){
-			// return v_label_bump
-		// })
-		// .height(function(){
-			// return h - (2*v_label_bump)
-		// })
-		// .fillStyle(null)
-		// .width(function(){
-			// return w/6
-		// })
-		// .left(function(){
-			// return 0
-		// })
 	// the pressure bar min to max pressurec
 	var pressure_bar = vis.add(pv.Bar)
 		.top(function(){
@@ -193,8 +302,6 @@ function render_pressure_gauge(div_id){
 		})
 		.strokeStyle('blue')
 		.lineWidth(3)
-	
-	
 	
 	vis.render()
 }
