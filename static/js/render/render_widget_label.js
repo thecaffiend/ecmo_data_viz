@@ -1,21 +1,10 @@
-// label data is just for testing pre-backend
-var label_data = {
-	label:"Pre-Membrane Pressure",
-	unit:"mmHG",
-	symbol:"P",
-	
-	// current is the last datapaint
-	datapoints:_.range(10, 90, 10).concat(_.range(90,10, -10))
-
-}
-
 var x_scale = null;
 var y_scale = null;
 
-function render_widget_label(div_id){
+function render_widget_label(div_id, widget_conf, widget_data){
 	var h = $("#"+div_id).height()
 	var w = $("#"+div_id).width()
-
+	
 	var vis = new pv.Panel()
 		.canvas(div_id)
 		.height(function() {
@@ -34,22 +23,22 @@ function render_widget_label(div_id){
 			return h*5;
 		})
 	.anchor("center").add(pv.Label)
-		.text(label_data.symbol)
+		.text(widget_conf.symbol)
 		.font("20px Verdana bold")
 	
 	symbol_dot.anchor("bottom").add(pv.Label)
-		.text(label_data.unit)
+		.text(widget_conf.unit)
 		.font("16px Verdana bold")
 	
 	vis.add(pv.Label)
-		.text(label_data.label)
+		.text(widget_conf.label)
 		.top(h/3)
 		.left(w/4)
 		.font("16px Verdana bold")
 	
 	vis.add(pv.Label)
 		.text(function(){
-			return ""+label_data.datapoints[label_data.datapoints.length-1]
+			return ""+widget_data[SERIES_IDX][widget_data[SERIES_IDX].length-1][VAL_IDX]
 		})
 		.top(h)
 		.left(w/2)

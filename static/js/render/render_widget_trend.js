@@ -1,10 +1,3 @@
-// trend data is just for testing pre-backend
-var trend_data = {
-	sp_max:100,
-	sp_min:0,
-	datapoints:[],
-}
-
 var x_scale = null;
 var y_scale = null;
 
@@ -13,26 +6,42 @@ var y_scale = null;
 // or decreasing. Less than this number will be cosidered a flat trend
 var slope_tolerance = .5;
 
-function render_widget_trend(div_id){
+function render_widget_trend(div_id, widget_conf, widget_data){
 	var h = $("#"+div_id).height()
 	var w = $("#"+div_id).width()
 
-	init_dataset()
-	
 	// square will always be half the available height. if there is a 
 	// triangle, it will take up the remaining half
 	var half_height = h/2
 	// centers the square
 	var square_left = (w - half_height) / 2	
 	
-	var vals_x = _.pluck(trend_data.dataset, 'x');
-	var vals_y = _.pluck(trend_data.dataset, 'y');
+	// get the min and max setpoints (stop or slow)
+	var max_sp_stop = null;
+	var max_sp_slow = null;
+	if(widget_data[SP_STOP_HIGH_IDX].length){
+		max_sp_stop = _.max(widget_data[SP_STOP_HIGH_IDX], function(d){return d[VAL_IDX]})[VAL_IDX]
+	}
+	if(widget_data[SP_SLOW_HIGH_IDX].length){		
+		max_sp_slow = _.max(widget_data[SP_SLOW_HIGH_IDX], function(d){return d[VAL_IDX]})[VAL_IDX]
+	}
+	var min_sp_stop = null
+	var min_sp_slow = null
+	if(widget_data[SP_STOP_LOW_IDX].length){
+		min_sp_stop = _.min(widget_data[SP_STOP_LOW_IDX], function(d){return d[VAL_IDX]})[VAL_IDX]
+	}
+	if(widget_data[SP_SLOW_LOW_IDX].length){
+		min_sp_slow = _.min(widget_data[SP_SLOW_LOW_IDX], function(d){return d[VAL_IDX]})[VAL_IDX]
+	}
+	
+	var vals_x = _.map(widget_data[SERIES_IDX], function(s){return s[TIME_IDX]});
+	var vals_y = _.map(widget_data[SERIES_IDX], function(s){return s[VAL_IDX]});
 	var reg_slope = ls_regression_slope(vals_x, vals_y);
 	
 	var triangle_location = trend_direction(reg_slope)
 	var triangle_exists = triangle_location != 0
 	
-	init_scales(square_left, triangle_location, half_height)
+	init_scales(square_left, triangle_location, half_height, widget_data)
 	
 	var vis = new pv.Panel()
 		.canvas(div_id)
@@ -56,7 +65,19 @@ function render_widget_trend(div_id){
 		})
 		.fillStyle(function(){
 			var last_value = vals_y[vals_y.length-1]
-			return (last_value < trend_data.sp_max && last_value > trend_data.sp_min) ? 'blue' : 'red'
+			if(max_sp_stop && min_sp_stop){
+				if(max_sp_slow && min_sp_slow){
+					return (last_value < max_sp_slow && last_value > min_sp_slow) ? 
+						'blue' : 
+						((last_value < max_sp_stop && last_value > max_sp_slow) || (last_value > min_sp_stop && last_value < min_sp_slow)) ? 'orange' : 'red'	
+				}
+				else{
+					return (last_value < max_sp_stop && last_value > min_sp_stop) ? 'blue' : 'red'
+				}
+			}
+			else if(max_sp_slow && min_sp_slow){
+				return (last_value < max_sp_slow && last_value > min_sp_slow) ? 'blue' : 'red'
+			}
 		})
 		.size(function(){
 			return half_height * 10
@@ -88,21 +109,36 @@ function render_widget_trend(div_id){
 		})
 		.fillStyle(function(){
 			var last_value = vals_y[vals_y.length-1]
-			return triangle_exists ? 
-				((last_value < trend_data.sp_max && last_value > trend_data.sp_min) ? 'blue' : 'red') : 
-				'black'
+			if(!triangle_exists){
+				return 'black'
+			}
+			else{
+				if(max_sp_stop && min_sp_stop){
+					if(max_sp_slow && min_sp_slow){
+						return (last_value < max_sp_slow && last_value > min_sp_slow) ? 
+							'blue' : 
+							((last_value < max_sp_stop && last_value > max_sp_slow) || (last_value > min_sp_stop && last_value < min_sp_slow)) ? 'orange' : 'red'	
+					}
+					else{
+						return (last_value < max_sp_stop && last_value > min_sp_stop) ? 'blue' : 'red'
+					}
+				}
+				else if(max_sp_slow && min_sp_slow){
+					return (last_value < max_sp_slow && last_value > min_sp_slow) ? 'blue' : 'red'
+				}
+			}
 		})
 	
 	var graph_line = vis.add(pv.Line)
 		.data(function(){
-			return trend_data.dataset
+			return widget_data[SERIES_IDX]
 		})
 		.interpolate('step-after')
 		.left(function(d){
-			return x_scale(d.x)
+			return x_scale(d[TIME_IDX])
 		})
 		.top(function(d){
-			return y_scale(d.y)
+			return y_scale(d[VAL_IDX])
 		})
 		.lineWidth(1)
 		.strokeStyle('white')
@@ -110,26 +146,12 @@ function render_widget_trend(div_id){
 	vis.render()
 }
 
-function init_dataset(){
-	for (var i = 0; i < 20; i++){
-		// giving 20 on either side of the setpoints so we can get values 
-		// outside the allowed values
-		trend_data.datapoints.push(get_random(trend_data.sp_min - 20, trend_data.sp_max + 20))
-	}
-	
-	var i = 0;
-	trend_data['dataset'] = _.map(trend_data.datapoints, function(d){
-		return {x:i++, y:d}
-	})
-	
-}
-
-function init_scales(sq_left, tri_loc, half_height){
-	x_scale = pv.Scale.linear(trend_data.dataset, function(d){return d.x}).range(sq_left, sq_left+half_height)
+function init_scales(sq_left, tri_loc, half_height, widget_data){
+	x_scale = pv.Scale.linear(widget_data[SERIES_IDX], function(d){return d[TIME_IDX]}).range(sq_left, sq_left+half_height)
 	
 	var sq_top = get_square_top(tri_loc, half_height)
 			
-	y_scale = pv.Scale.linear(trend_data.dataset, function(d){return d.y}).range(sq_top, sq_top+half_height)
+	y_scale = pv.Scale.linear(widget_data[SERIES_IDX], function(d){return d[VAL_IDX]}).range(sq_top+half_height, sq_top)
 }
 
 function get_square_top(tri_loc, half_height){

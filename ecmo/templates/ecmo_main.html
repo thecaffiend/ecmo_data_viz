@@ -58,6 +58,9 @@
 //   pos: '',       // numerical index of the widget in the container
 //   series: []     // list of series names this widget displays such as 'set_low_slow' or 'orders'
 //   div_id: '',    // id of the div containing the widget
+//	 label: '',        // label for the series e.g. "Post-Membrane Pressure"
+//   unit: '',         // the unit of the masurand (e.g. mmHG, %, etc)
+//   symbol: '',       // Single letter symbol for the type of measurand (e.g. P for pressure)
 // },]
 
 var test_configs = [
@@ -66,37 +69,160 @@ var test_configs = [
 		"pos": "1",
 		"series": ["measurement"],
 		"div_id": "premem_pressure",
+		"label":"Pre-Membrane Pressure",
+		"unit":"mmHG",
+		"symbol":"P",
+		
 	},
 	{
 		"container": "R",
 		"pos": "1",
 		"series": ["orders", "measurement"],
 		"div_id": "postmem_pressure",
+		"label":"Post-Membrane Pressure",
+		"unit":"mmHG",
+		"symbol":"P",
 	},
 	{
 		"container": "B",
 		"pos": "1",
 		"series": ["set_low_slow", "set_high_slow","set_low_stop", "set_high_stop","measurement"],
 		"div_id": "water_temp",
+		"label":"Water Temperature",
+		"unit":"°C",
+		"symbol":"T",
 	},
 	{
 		"container": "L",
 		"pos": "1",
 		"series": ["orders","measurement"],
 		"div_id": "svo2",
+		"label":"SVO2",
+		"unit":"%",
+		"symbol":"S",
 	},
 ]
 
+// JSON format for series (list of series...must be in the right order):
+// [
+// 	// EACH ARRAY SHOULD BE THE SAME SIZE OR EMPTY. EACH ELEMENT CONTAINS A 2 
+//  // VALUE LIST. THE FIRST VALUE IS THE TIME (REPRESENTING SECONDS) AND THE 
+//  // SECOND ELEMENT IS THE VALUE OF THE ARRAY AT THAT TIME
+//   [/*list of high setpoints for slowing*/], 
+//   [/*list of low setpoints for slowing*/],
+//   [/*list of high setpoints for stopping*/],
+//   [/*list of low setpoints for stopping*/],
+//   [/*list of measurements of the measurand*/],
+//   [/*list of dr's orders for the measurand*/],
+// ]
+
+// consts for the indexes of individual series arrays in the uber series array
+const SP_SLOW_HIGH_IDX = 0;
+const SP_SLOW_LOW_IDX  = 1;
+const SP_STOP_HIGH_IDX = 2;
+const SP_STOP_LOW_IDX  = 3;
+const SERIES_IDX = 4;
+const ORDER_IDX = 5;
+
+// consts for the contents of series arrays
+const TIME_IDX = 0;
+const VAL_IDX = 1;
+
+var test_series = {
+	"premem_pressure": [
+		[[0, 220], [1, 220], [2, 220], [3, 220], [4, 220], [5, 220], [6, 220], [7, 220], [8, 220], [9, 220], [10, 220]],
+		[[0, 170], [1, 170], [2, 170], [3, 170], [4, 170], [5, 170], [6, 170], [7, 170], [8, 170], [9, 170], [10, 170]],
+		[[0, 230], [1, 230], [2, 230], [3, 230], [4, 230], [5, 230], [6, 230], [7, 230], [8, 230], [9, 230], [10, 230]],
+		[[0, 160], [1, 160], [2, 160], [3, 160], [4, 160], [5, 160], [6, 160], [7, 160], [8, 160], [9, 160], [10, 160]],
+		[[0, get_random(160, 230)], [1, get_random(160, 230)], [2, get_random(160, 230)], [3, get_random(160, 230)], 
+				[4, get_random(160, 230)], [5, get_random(160, 230)], [6, get_random(160, 230)], [7, get_random(160, 230)], 
+				[8, get_random(160, 230)], [9, get_random(160, 230)], [10, get_random(160, 230)]],
+		[[0, 200], [1, 200], [2, 200], [3, 200], [4, 200], [5, 200], [6, 200], [7, 200], [8, 200], [9, 200], [10, 200]],
+	],
+	"postmem_pressure": [
+		[[0, 220], [1, 220], [2, 220], [3, 220], [4, 220], [5, 220], [6, 220], [7, 220], [8, 220], [9, 220], [10, 220]],
+		[[0, 170], [1, 170], [2, 170], [3, 170], [4, 170], [5, 170], [6, 170], [7, 170], [8, 170], [9, 170], [10, 170]],
+		[[0, 230], [1, 230], [2, 230], [3, 230], [4, 230], [5, 230], [6, 230], [7, 230], [8, 230], [9, 230], [10, 230]],
+		[[0, 160], [1, 160], [2, 160], [3, 160], [4, 160], [5, 160], [6, 160], [7, 160], [8, 160], [9, 160], [10, 160]],
+		[[0, get_random(160, 230)], [1, get_random(160, 230)], [2, get_random(160, 230)], [3, get_random(160, 230)], 
+				[4, get_random(160, 230)], [5, get_random(160, 230)], [6, get_random(160, 230)], [7, get_random(160, 230)], 
+				[8, get_random(160, 230)], [9, get_random(160, 230)], [10, get_random(160, 230)]],
+		[[0, 200], [1, 200], [2, 200], [3, 200], [4, 200], [5, 200], [6, 200], [7, 200], [8, 200], [9, 200], [10, 200]],
+	],
+	"water_temp": [
+		[[0, 38], [1, 38], [2, 38], [3, 38], [4, 38], [5, 38], [6, 38], [7, 38], [8, 38], [9, 38], [10, 38]],
+		[[0, 35], [1, 35], [2, 35], [3, 35], [4, 35], [5, 35], [6, 35], [7, 35], [8, 35], [9, 35], [10, 35]],
+		[[0, 39], [1, 39], [2, 39], [3, 39], [4, 39], [5, 39], [6, 39], [7, 39], [8, 39], [9, 39], [10, 39]],
+		[[0, 34], [1, 34], [2, 34], [3, 34], [4, 34], [5, 34], [6, 34], [7, 34], [8, 34], [9, 34], [10, 34]],
+		[[0, get_random(34, 39)], [1, get_random(34, 39)], [2, get_random(34, 39)], [3, get_random(34, 39)], 
+				[4, get_random(34, 39)], [5, get_random(34, 39)], [6, get_random(34, 39)], [7, get_random(34, 39)], 
+				[8, get_random(34, 39)], [9, get_random(34, 39)], [10, get_random(34, 39)]],
+		[[0, 37], [1, 37], [2, 37], [3, 37], [4, 37], [5, 37], [6, 37], [7, 37], [8, 37], [9, 37], [10, 37]],
+	],
+	"svo2": [
+		[[0, 220], [1, 220], [2, 220], [3, 220], [4, 220], [5, 220], [6, 220], [7, 220], [8, 220], [9, 220], [10, 220]],
+		[[0, 170], [1, 170], [2, 170], [3, 170], [4, 170], [5, 170], [6, 170], [7, 170], [8, 170], [9, 170], [10, 170]],
+		[[0, 230], [1, 230], [2, 230], [3, 230], [4, 230], [5, 230], [6, 230], [7, 230], [8, 230], [9, 230], [10, 230]],
+		[[0, 160], [1, 160], [2, 160], [3, 160], [4, 160], [5, 160], [6, 160], [7, 160], [8, 160], [9, 160], [10, 160]],
+		[[0, get_random(160, 230)], [1, get_random(160, 230)], [2, get_random(160, 230)], [3, get_random(160, 230)], 
+				[4, get_random(160, 230)], [5, get_random(160, 230)], [6, get_random(160, 230)], [7, get_random(160, 230)], 
+				[8, get_random(160, 230)], [9, get_random(160, 230)], [10, get_random(160, 230)]],
+		[[0, 200], [1, 200], [2, 200], [3, 200], [4, 200], [5, 200], [6, 200], [7, 200], [8, 200], [9, 200], [10, 200]],
+	],
+}
+
+	
+
+
+function create_widget_div(conf){
+	var widget = $('<div/>',{
+        id: conf.div_id,
+        'class': 'widget'
+    })
+    // loop over (title, trend, main)
+    $.each(['label', 'trend', 'graph'], function(idx, div_type){
+        $(widget).append($('<div/>',{
+            id: conf.div_id + '_' + div_type,
+            'class': div_type
+        }))
+        // generate the protovis pieces for (title, trend, main)
+//        $.data(widget, 'pvs')[div] = widget_thing(div_type, wc.div_id + '_' + div_type)
+    })	
+    
+    var container = $('#'+conf.container)
+    container.append(widget)
+    
+     $.data(widget, 'conf', conf)
+     $.data(widget, 'series', test_series[conf.div_id])
+}
+
+function render_widget(widget_conf, widget_data){
+	render_widget_graph(widget_conf.div_id+"_graph", widget_conf, widget_data);
+	render_widget_trend(widget_conf.div_id+"_trend", widget_conf, widget_data);
+	render_widget_label(widget_conf.div_id+"_label", widget_conf, widget_data)
+}
+     		
 $(document).ready(function() {
-	render_widget_graph("main");
-	render_widget_trend("arrow");
-	render_widget_label('label')
-});     		
+	$.each(test_configs, function(idx, conf){
+		create_widget_div(conf)
+		render_widget(conf, test_series[conf.div_id])
+	})
+});
+
 </script>
 <!-- after testing and getting this working, this will be replaced by a div generator function-->
+<!--
 <div id="widget" class="widgetDiv">
 	<div id="label" class="widgetLabel"></div>
 	<div id="arrow" class="widgetArrow"></div>
 	<div id="main" class="widgetMain"></div>
+</div>
+-->
+<div class="outer">
+<div id="T" class="widget_row"></div>
+<div id="L" class="widget_col_left"></div>
+<div id="center" class="viz_center"></div>
+<div id="R" class="widget_col_right"></div>
+<div id="B" class="widget_row"></div>
 </div>
 {% endblock %}
