@@ -9,7 +9,7 @@ urlpatterns = patterns('ecmo_data_viz.ecmo.views',
     (r'^trend_symbol/$', 'trend_symbol_view'),
     
     (r'^man_behind_curtain/(\d{,4})?$', 'man_behind_curtain'),
-    (r'^man_behind_curtain/(\d{,4})/socket$', 'mbc_socket'),
+    (r'^man_behind_curtain/(\d{,4})/command$', 'mbc_command'),
     (r'^man_behind_curtain/(\d{,4})/clock$', 'mbc_clock'),
 )
 

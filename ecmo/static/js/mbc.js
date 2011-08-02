@@ -1,8 +1,8 @@
-var clock, clock_uri;
+// Sockets
+var clock, cmd;
+
 var running = false;
 var tick;
-
-var intvl = null;
 
 const RESUME = 0;
 const SET = 1;
@@ -11,28 +11,73 @@ const PAUSE = 2;
 $(function(){
     var msg;
     
-    init_clock();
+    init_sockets();
     
     $('#toggle_running').click(function(){
         running = !running;
         $(this).text(running ? "Pause" : "Resume");
-        msg = {'type':running ? RESUME : PAUSE}
-        clock.send(JSON.stringify(msg))
+        send(clock,{
+            'type':running ? RESUME : PAUSE})
     })
     
     $('#set_time').click(function(){
-        msg = {'type':SET, 'run_time': parseInt($('#run_time_set').val())}
-        clock.send(JSON.stringify(msg))
+        send(clock,{
+            'type':SET, 
+            'run_time': parseInt($('#run_time_set').val())
+            })
+    })
+    
+    $('.feed .add').live('click', function(){
+        var evt = $(this).parents('.event');
+        var feed = $(this).parents('.feed');
+        send(cmd, {
+            feed:           feed.attr('id'),
+            value:          parseFloat(evt.find('.value').val()),
+            arg:            parseFloat(evt.find('.arg').val()),
+            run_time:       parseInt(evt.find('.run_time').val()),
+            distribution:   evt.find('.dist').val(),
+            trend:          evt.find('.trend').val(),
+            })
+    })
+    
+    $('.feed .remove').live('click', function(){
+        alert('unimplemented')
     })
     
 })
 
-function init_clock(){
-    clock = new WebSocket("ws://localhost:8000/ecmo/man_behind_curtain/"+$('#run_id').val()+"/clock");
-    clock.onmessage = on_tick;
+function send(ws, obj){
+    console.log(JSON.stringify(obj))
+    ws.send(JSON.stringify(obj))
 }
 
-function on_tick(e){
-    tick = JSON.parse(e.data).run_time;
+function init_sockets(){
+    clock = new WebSocket(ws_uri('clock'));
+    clock.onmessage = function(e){on_tick(JSON.parse(e.data))};
+    
+    cmd = new WebSocket(ws_uri('command'));
+    cmd.onmessage = function(e){on_command(JSON.parse(e.data))};
+}
+
+function ws_uri(socket){
+    return document.URL.replace('http://','ws://')+"/"+socket
+}
+
+function on_tick(msg){
+    tick = msg.run_time;
     $('#run_time').val(tick)
+}
+
+function on_command(msg){
+    if(msg.events && msg.events.length){
+        $.each(msg.events, function(idx, evt){
+            $( "#eventTemplate" ).tmpl( evt )
+                    .appendTo( "#" + evt.feed + " tbody" );  
+        $('#' + evt.feed + ' td.sort').sortElements(function(a,b){
+            return parseInt($(a).text()) > parseInt($(b).text()) ? 1 : -1;
+        }, function(){
+            return this.parentNode; 
+            })
+        })
+    }
 }
