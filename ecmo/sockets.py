@@ -96,7 +96,10 @@ def mbc_clock(request, run_id):
                     run.run_time += 1
                 msg_time()
                 
-                run.update_feeds()
+                # generates all the new points
+                points = run.update_feeds()
+                #if points:
+                #    ws.send(jsjson({"points":points))
                 
                 sleep_time = time.time()
                 # attempt to counter drift
