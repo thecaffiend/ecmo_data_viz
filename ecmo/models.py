@@ -143,9 +143,15 @@ class Screen(models.Model):
     regions = models.ManyToManyField("ScreenRegion")
     template = models.SlugField(max_length=32, choices=TEMPLATES)
     
+    def __unicode__(self):
+        return self.label
+    
 
 class ScreenRegion(models.Model):
     js_name = models.SlugField(max_length=32, unique=True)
+    
+    def __unicode__(self):
+        return self.js_name
 
 
 class WidgetType(models.Model):
@@ -164,6 +170,7 @@ class WidgetSeries(models.Model):
     widget_type = models.ForeignKey(WidgetType)
     label = models.CharField(max_length=64)
     js_name = models.SlugField(max_length=32)
+    feed_type = models.ForeignKey(FeedType)
     
     class Meta:
         unique_together = ('widget_type', 'js_name')
