@@ -1,5 +1,5 @@
 from django.http import HttpResponse
-#from util.JsonResponse import JsonResponse
+from util.JsonResponse import JsonResponse
 from django.db import connection
 from ecmo.models import *
 from django.shortcuts import render_to_response
@@ -24,6 +24,24 @@ def trend_symbol_view(request):
 
 def widget_view(request):
     return render_to_response('ecmo_widget.html', {})
+
+def widget_confs_json(request):
+    widget_confs = []
+    
+    widgets = Widget.objects.all()
+    
+    for widget in widgets:
+        w = {"screen": widget.screen.js_name,
+             "container": widget.region.js_name,
+             "pos": widget.position,
+             "series": [ws.js_name for ws in widget.widget_type.widgetseries_set.all()],
+             "div_id": widget.widget_type.js_name,
+             "label":widget.widget_type.label,
+             "unit":widget.widget_type.unit,
+             "symbol":widget.widget_type.symbol,
+        }
+        widget_confs.append(w)
+    return JsonResponse(widget_confs)
 
 def man_behind_curtain(request, run_id=None):
     ctxt = {'event_types': dict(EVT_DISTRIBUTIONS), 'trend_types': dict(EVT_TRENDS)}
