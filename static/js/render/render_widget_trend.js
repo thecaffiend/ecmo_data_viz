@@ -6,6 +6,13 @@ var y_scale = null;
 // or decreasing. Less than this number will be cosidered a flat trend
 var slope_tolerance = .5;
 
+// number of seconds of data to show in this view. default of 5 minutes (300 seconds)
+const SECONDS_TO_SHOW = 300;
+
+// number of datapoints to render in the view. the SECONDS_TO_SHOW number of 
+// seconds will be merged into NUM_DATAPOINTS_SHOWN number of points
+const NUM_DATAPOINTS_SHOWN = 10;
+
 function render_widget_trend(div_id, widget_conf, widget_data){
 	var h = $("#"+div_id).height()
 	var w = $("#"+div_id).width()
@@ -15,6 +22,9 @@ function render_widget_trend(div_id, widget_conf, widget_data){
 	var half_height = h/2
 	// centers the square
 	var square_left = (w - half_height) / 2	
+	
+	var wdata = widget_data[SERIES_IDX]
+	var massaged_data = massage_data(wdata)
 	
 	// get the min and max setpoints (stop or slow)
 	var max_sp_stop = null;
@@ -131,7 +141,8 @@ function render_widget_trend(div_id, widget_conf, widget_data){
 	
 	var graph_line = vis.add(pv.Line)
 		.data(function(){
-			return widget_data[SERIES_IDX]
+//			return widget_data[SERIES_IDX]
+			return massaged_data
 		})
 		.interpolate('step-after')
 		.left(function(d){
@@ -144,6 +155,30 @@ function render_widget_trend(div_id, widget_conf, widget_data){
 		.strokeStyle('white')
 		
 	vis.render()
+}
+
+// this view is interested in showing the last 5 minutes
+function massage_data(wdata){
+	// try to grab the last frame of seconds we're interested in showing
+	var seconds_slice = wdata.slice(-SECONDS_TO_SHOW)
+	
+	// function for calculating the average of our datapoint slices
+	var avg = function(arr){return (_.reduce(arr, function(memo, dp){ return memo + dp[VAL_IDX]; }, 0))/arr.length}
+	
+	// do we care if we don't have a full frame of data? should we treat that 
+	// differently?
+	
+	// go from SECONDS_TO_SHOW number of datapoints (or fewer) down to 
+	// NUM_DATAPOINTS_SHOWN (or fewer). for now, just average 
+	// the slice values...not the best solution
+	var step = SECONDS_TO_SHOW / NUM_DATAPOINTS_SHOWN;
+	var reduced_data = []
+	for(var i=0; i < wdata.length; i+=step){
+		var avg_data = avg(wdata.slice(i, i+step))
+		reduced_data.push([wdata[i][TIME_IDX], avg_data])
+	}
+	console.log(reduced_data)
+	return reduced_data
 }
 
 function init_scales(sq_left, tri_loc, half_height, widget_data){
