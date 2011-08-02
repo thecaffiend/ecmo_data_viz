@@ -11,6 +11,9 @@ from ecmo.models import *
 
 import sys
 
+def jsjson(msg):
+     return simplejson.dumps(msg, ensure_ascii=True)
+
 @require_websocket
 def screen_socket(request, screen_name, run_id):
     """
@@ -28,22 +31,24 @@ def screen_socket(request, screen_name, run_id):
     ss_base = {}
     p_ss_map = {}
     
-    for wt_js, wt in used_widget.items():
-        for ws in wt.widgetseries_set.all():
-            ss_base.setdefault(wt_js, {})[ws.js_name] = []
-            p_ss_map[ws.feed_type.js_name] = (wt_js, ws.js_name)
+    for wt_js, wt in used_widgets.items():
+        for wser in wt.widgetseries_set.all():
+            ss_base.setdefault(wt_js, {})[wser.js_name] = []
+            p_ss_map[wser.feed_type.js_name] = (wt_js, wser.js_name)
+    
+    last_sent = None
     
     while True:
         points = cache.get(run.raw_points_key)
-        if points and points['points'] and points['run_time'] != last_sent:
-            
+        if points and points.get('points',False) and points['run_time'] != last_sent:
+            run_time = points['run_time']
             screen_struct = deepcopy(ss_base)
             for p in points['points']:
                 p_map = p_ss_map[p['feed']]
-                screen_struct[p_map[0]][p_map[1]] = [points['run_time'], p['val']] 
-            
-            ws.send(jsjson(screen_struct))
-            last_sent = points['run_time']
+                screen_struct[p_map[0]][p_map[1]] = [run_time, p['val']] 
+            jstruct = jsjson(screen_struct)
+            ws.send(jstruct)
+            last_sent = run_time
         time.sleep(.25)
 
 @require_websocket
@@ -161,6 +166,3 @@ def mbc_clock(request, run_id):
         elif msg['type'] == CLK_SET:
             run.run_time = msg['run_time']
             msg_time()
-
-def jsjson(msg):
-     return simplejson.dumps(msg, ensure_ascii=True)

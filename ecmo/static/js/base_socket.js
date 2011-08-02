@@ -7,9 +7,9 @@ $(function(){
 
 function init_sockets(){
     sock = new WebSocket(ws_uri('socket'));
-    // uncomment this for auto parsing
+    // uncomment this for auto parsing, then just use the message
     // sock.onmessage = function(e){on_tick(JSON.parse(e.data))};
-    sock.onmessage = function(e){on_tick(JSON.parse(e.data))};
+    sock.onmessage = function(e){on_tick(e)};
 }
 
 function on_tick(msg){
