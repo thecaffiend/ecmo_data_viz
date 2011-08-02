@@ -18,7 +18,15 @@ class Run(models.Model):
         Seems like the cache should be used to keep from doing unneccessary
         roundtrips, but maybe this just adds a layer of complexity?
         """
-        pass
+        points = []
+        for feed in self.feed_set.all():
+            try:
+                point = feed.feedpoint_set.get(run_time=self.run_time)
+            except:
+                point = FeedPoint.generate(feed, self.run_time, feed.next_event(self.run_time))
+                point.save()
+            points.append(point)
+        return points
 
 class FeedType(models.Model):
     label = models.CharField(max_length=64)
@@ -40,6 +48,13 @@ class Feed(models.Model):
     
     class Meta:
         unique_together = ('feed_type', 'run')
+    
+    def next_event(self, run_time):
+        try:
+            return self.feedevent_set.filter(run_time__lte=run_time).order_by('-run_time')[0]
+        except:
+            return None
+            
 
 DIST_SET = 'SET'
 DIST_NRM = 'NRM'
@@ -56,6 +71,8 @@ TND_LNR = 'LNR'
 EVT_TRENDS = (
     (TND_LNR, 'Linear'),
 )
+
+import random
 
 class FeedEvent(models.Model):
     """
@@ -79,6 +96,14 @@ class FeedEvent(models.Model):
         dct = dict([(k,v) for k,v in self.__dict__.items() if k[0] != '_'])
         dct['feed'] = self.feed.feed_type.js_name
         return dct
+    
+    def generate_value(self, run_time):
+        dists = {
+            DIST_SET: lambda value, a: v,
+            DIST_NRM: lambda mu, sigma: random.gauss(mu, sigma),
+            DIST_UNI: lambda min_v, max_v: random.uniform(min_v, max_v) 
+        }
+        return dists[self.distribution](self.value, self.arg)
 
 
 class FeedPoint(models.Model):
@@ -88,6 +113,20 @@ class FeedPoint(models.Model):
     
     class Meta:
         unique_together = ('feed', 'run_time')
+    
+    @staticmethod
+    def generate(feed, run_time, event):
+        args = {
+            "run_time": run_time,
+            "feed": feed
+        }
+        if event:
+            args['value'] = event.generate_value(run_time)
+        else:
+            args['value'] = 0
+        point = FeedPoint(**args)
+        
+        return point
 
 TEMPLATES = (
     ('dashboard', 'Dashboard'),
