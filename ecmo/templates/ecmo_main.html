@@ -63,6 +63,7 @@
 //   symbol: '',       // Single letter symbol for the type of measurand (e.g. P for pressure)
 // },]
 
+// only for testing. remove after all working
 var test_configs = [
 	{
 		"container": "T",
@@ -185,13 +186,15 @@ var test_series = {
 }
 
 	
-
+var data_url = "/ecmo/widget_confs/json";
+var configs = null;
 
 function create_widget_div(conf){
 	var widget = $('<div/>',{
         id: conf.div_id,
         'class': 'widget'
     })
+    
     // loop over (title, trend, main)
     $.each(['label', 'trend', 'graph'], function(idx, div_type){
         $(widget).append($('<div/>',{
@@ -216,26 +219,28 @@ function render_widget(widget_conf, widget_data){
 }
      		
 $(document).ready(function() {
-	$.each(test_configs, function(idx, conf){
-		create_widget_div(conf)
-		render_widget(conf, test_series[conf.div_id])
-	})
+	$.get(data_url, function(fetched_configs){
+        configs = fetched_configs
+        $.each(configs, function(idx, conf){
+        	console.log(conf)
+			create_widget_div(conf)
+			render_widget(conf, test_series[conf.div_id])
+		})
+    })
+    
+	
 });
 
 </script>
-<!-- after testing and getting this working, this will be replaced by a div generator function-->
-<!--
-<div id="widget" class="widgetDiv">
-	<div id="label" class="widgetLabel"></div>
-	<div id="arrow" class="widgetArrow"></div>
-	<div id="main" class="widgetMain"></div>
-</div>
+<!-- 
+	These are the screen regin divs for the dashboard view (hence db_ prefix). 
+	We have a (T)op, (B)ottom, (L)eft, (R)ight and (C)enter region.
 -->
 <div class="outer">
-<div id="T" class="widget_row"></div>
-<div id="L" class="widget_col_left"></div>
-<div id="center" class="viz_center"></div>
-<div id="R" class="widget_col_right"></div>
-<div id="B" class="widget_row"></div>
+<div id="db_T" class="widget_row"></div>
+<div id="db_L" class="widget_col_left"></div>
+<div id="db_" class="viz_center"></div>
+<div id="db_R" class="widget_col_right"></div>
+<div id="db_B" class="widget_row"></div>
 </div>
 {% endblock %}
