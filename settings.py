@@ -95,7 +95,6 @@ SECRET_KEY = '=ge_r#fs+8e_!#38u6sndj=7sul1$qu)bd4zttsak2zn5hzk7m'
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
-#     'django.template.loaders.eggs.Loader',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -125,9 +124,11 @@ INSTALLED_APPS = (
     'django.contrib.admindocs',
     'django.contrib.markup',
     'django.contrib.staticfiles',
+    'south',
+    'django_websocket',
     'ecmo',
     # Uncomment the next line to enable the admin:
-    # 'django.contrib.admin',
+    'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
