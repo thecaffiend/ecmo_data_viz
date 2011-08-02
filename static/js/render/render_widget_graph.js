@@ -1,16 +1,30 @@
 var x_scale = null;
 var y_scale = null;
 
+var slow_high_key = null;
+var slow_low_key = null;
+var stop_high_key = null;
+var stop_low_key = null;
+var series_key = null;
+var order_key = null;
+
 function render_widget_graph(div_id, widget_conf, widget_data){
 	var h = $("#"+div_id).height()
 	var w = $("#"+div_id).width()
 	
+	slow_high_key = widget_conf.div_id + SLOW_HIGH_SFX;
+	slow_low_key = widget_conf.div_id + SLOW_LOW_SFX;
+	stop_high_key = widget_conf.div_id + STOP_HIGH_SFX;
+	stop_low_key = widget_conf.div_id + STOP_LOW_SFX;
+	series_key = widget_conf.div_id + SERIES_SFX;
+	order_key = widget_conf.div_id + ORDER_SFX;
+	
 	// take up 4/5 of the width with the setpoint and measurement lines
 	// assumes good data.
-	var sp_slow_step = (w-(w/5)) / widget_data[SP_SLOW_HIGH_IDX].length;	
-	var sp_stop_step = (w-(w/5)) / widget_data[SP_STOP_HIGH_IDX].length;	
-	var order_step = (w-(w/5)) / widget_data[ORDER_IDX].length;	
-	var series_step = (w-(w/5)) / widget_data[SERIES_IDX].length;	
+	var sp_slow_step = (w-(w/5)) / widget_data[slow_high_key].length;	
+	var sp_stop_step = (w-(w/5)) / widget_data[stop_high_key].length;	
+	var order_step = (w-(w/5)) / widget_data[order_key].length;	
+	var series_step = (w-(w/5)) / widget_data[series_key].length;	
 	
 	// steps for adding tick marks, want one per 10 minutes
 	var tick_step = (w-(w/5)) / 6;
@@ -20,25 +34,25 @@ function render_widget_graph(div_id, widget_conf, widget_data){
 	// slowing stop points next, if hose aren't there, try the series data with
 	// a nudge factor of 10
 	var max_sp = null;
-	if(widget_data[SP_STOP_HIGH_IDX].length){
-		max_sp = _.max(widget_data[SP_STOP_HIGH_IDX], function(d){return d[VAL_IDX]})[VAL_IDX]
+	if(widget_data[stop_high_key].length){
+		max_sp = _.max(widget_data[stop_high_key], function(d){return d[VAL_IDX]})[VAL_IDX]
 	}
-	else if(widget_data[SP_SLOW_HIGH_IDX].length){		
-		max_sp = _.max(widget_data[SP_SLOW_HIGH_IDX], function(d){return d[VAL_IDX]})[VAL_IDX]
+	else if(widget_data[slow_high_key].length){		
+		max_sp = _.max(widget_data[slow_high_key], function(d){return d[VAL_IDX]})[VAL_IDX]
 	}
 	else{
-		max_sp = _.max(widget_data[SERIES_IDX], function(d){return d[VAL_IDX]})[VAL_IDX] + 10
+		max_sp = _.max(widget_data[series_key], function(d){return d[VAL_IDX]})[VAL_IDX] + 10
 	}
 	
 	var min_sp = null
-	if(widget_data[SP_STOP_LOW_IDX].length){
-		min_sp = _.min(widget_data[SP_STOP_LOW_IDX], function(d){return d[VAL_IDX]})[VAL_IDX]
+	if(widget_data[stop_low_key].length){
+		min_sp = _.min(widget_data[stop_low_key], function(d){return d[VAL_IDX]})[VAL_IDX]
 	}
-	else if(widget_data[SP_SLOW_LOW_IDX].length){
-		min_sp = _.min(widget_data[SP_SLOW_LOW_IDX], function(d){return d[VAL_IDX]})[VAL_IDX]
+	else if(widget_data[slow_low_key].length){
+		min_sp = _.min(widget_data[slow_low_key], function(d){return d[VAL_IDX]})[VAL_IDX]
 	}
 	else{
-		min_sp = _.min(widget_data[SERIES_IDX], function(d){return d[VAL_IDX]})[VAL_IDX] - 10
+		min_sp = _.min(widget_data[series_key], function(d){return d[VAL_IDX]})[VAL_IDX] - 10
 	}
 	
 	var y_scale = pv.Scale.linear(max_sp, min_sp).range(15, h-15)
@@ -88,7 +102,7 @@ function render_widget_graph(div_id, widget_conf, widget_data){
 	
 	// upper stop setpoint line
 	var setpoint_stop_top_line = vis.add(pv.Line)
-		.data(widget_data[SP_STOP_HIGH_IDX])
+		.data(widget_data[stop_high_key])
 		.top(function(d){
 			return y_scale(d[VAL_IDX])
 		})
@@ -99,12 +113,12 @@ function render_widget_graph(div_id, widget_conf, widget_data){
 		.lineWidth(2)
 		.strokeDasharray("3, 5")
 		.visible(function(){
-			return widget_data[SP_STOP_HIGH_IDX].length > 0
+			return widget_data[stop_high_key].length > 0
 		})
 	
 	vis.add(pv.Label)
 		.text(function(){
-			return ""+widget_data[SP_STOP_HIGH_IDX][widget_data[SP_STOP_HIGH_IDX].length - 1][VAL_IDX]
+			return ""+widget_data[stop_high_key][widget_data[stop_high_key].length - 1][VAL_IDX]
 		})
 		.textAlign("center")
 		.font('20px Verdana bold')
@@ -112,15 +126,15 @@ function render_widget_graph(div_id, widget_conf, widget_data){
 		.right(w/6)
 		.top(function(){
 			// add 10 to push the label down
-			return y_scale(widget_data[SP_STOP_HIGH_IDX][widget_data[SP_STOP_HIGH_IDX].length - 1][VAL_IDX]) + 10
+			return y_scale(widget_data[stop_high_key][widget_data[stop_high_key].length - 1][VAL_IDX]) + 10
 		})
 		.visible(function(){
-			return widget_data[SP_STOP_HIGH_IDX].length > 0
+			return widget_data[stop_high_key].length > 0
 		})
 
 	// upper slow setpoint line
 	var setpoint_slow_top_line = vis.add(pv.Line)
-		.data(widget_data[SP_SLOW_HIGH_IDX])
+		.data(widget_data[slow_high_key])
 		.top(function(d){
 			return y_scale(d[VAL_IDX])
 		})
@@ -131,12 +145,12 @@ function render_widget_graph(div_id, widget_conf, widget_data){
 		.lineWidth(2)
 		.strokeDasharray("3, 5")
 		.visible(function(){
-			return widget_data[SP_SLOW_HIGH_IDX].length
+			return widget_data[slow_high_key].length
 		})
 	
 	vis.add(pv.Label)
 		.text(function(){
-			return ""+widget_data[SP_SLOW_HIGH_IDX][widget_data[SP_SLOW_HIGH_IDX].length - 1][VAL_IDX]
+			return ""+widget_data[slow_high_key][widget_data[slow_high_key].length - 1][VAL_IDX]
 		})
 		.textAlign("center")
 		.font('20px Verdana bold')
@@ -144,16 +158,16 @@ function render_widget_graph(div_id, widget_conf, widget_data){
 		.right(w/6)
 		.top(function(){
 			// add 10 to push the label down
-			return y_scale(widget_data[SP_SLOW_HIGH_IDX][widget_data[SP_SLOW_HIGH_IDX].length - 1][VAL_IDX]) + 10
+			return y_scale(widget_data[slow_high_key][widget_data[slow_high_key].length - 1][VAL_IDX]) + 10
 		})
 		.visible(function(){
-			return widget_data[SP_SLOW_HIGH_IDX].length
+			return widget_data[slow_high_key].length
 		})
 
 		
 	// lower stop setpoint line
 	var setpoint_stop_low_line = vis.add(pv.Line)
-		.data(widget_data[SP_STOP_LOW_IDX])
+		.data(widget_data[stop_low_key])
 		.top(function(d){
 			return y_scale(d[VAL_IDX])
 		})
@@ -164,12 +178,12 @@ function render_widget_graph(div_id, widget_conf, widget_data){
 		.lineWidth(2)
 		.strokeDasharray("3, 5")
 		.visible(function(){
-			return widget_data[SP_STOP_LOW_IDX].length
+			return widget_data[stop_low_key].length
 		})
 	
 	vis.add(pv.Label)
 		.text(function(){
-			return ""+widget_data[SP_STOP_LOW_IDX][widget_data[SP_STOP_LOW_IDX].length - 1][VAL_IDX]
+			return ""+widget_data[stop_low_key][widget_data[stop_low_key].length - 1][VAL_IDX]
 		})
 		.textAlign("center")
 		.font('20px Verdana bold')
@@ -177,15 +191,15 @@ function render_widget_graph(div_id, widget_conf, widget_data){
 		.right(w/6)
 		.top(function(){
 			// add 10 to push the label down
-			return y_scale(widget_data[SP_STOP_LOW_IDX][widget_data[SP_STOP_LOW_IDX].length - 1][VAL_IDX]) + 10
+			return y_scale(widget_data[stop_low_key][widget_data[stop_low_key].length - 1][VAL_IDX]) + 10
 		})
 		.visible(function(){
-			return widget_data[SP_STOP_LOW_IDX].length
+			return widget_data[stop_low_key].length
 		})
 
 	// lower slow setpoint line
 	var setpoint_slow_low_line = vis.add(pv.Line)
-		.data(widget_data[SP_SLOW_LOW_IDX])
+		.data(widget_data[slow_low_key])
 		.top(function(d){
 			return y_scale(d[VAL_IDX])
 		})
@@ -196,12 +210,12 @@ function render_widget_graph(div_id, widget_conf, widget_data){
 		.lineWidth(2)
 		.strokeDasharray("3, 5")
 		.visible(function(){
-			return widget_data[SP_SLOW_LOW_IDX].length
+			return widget_data[slow_low_key].length
 		})
 	
 	vis.add(pv.Label)
 		.text(function(){
-			return ""+widget_data[SP_SLOW_LOW_IDX][widget_data[SP_SLOW_LOW_IDX].length - 1][VAL_IDX]
+			return ""+widget_data[slow_low_key][widget_data[slow_low_key].length - 1][VAL_IDX]
 		})
 		.textAlign("center")
 		.font('20px Verdana bold')
@@ -209,14 +223,14 @@ function render_widget_graph(div_id, widget_conf, widget_data){
 		.right(w/6)
 		.top(function(){
 			// add 10 to push the label down
-			return y_scale(widget_data[SP_SLOW_LOW_IDX][widget_data[SP_SLOW_LOW_IDX].length - 1][VAL_IDX]) + 10
+			return y_scale(widget_data[slow_low_key][widget_data[slow_low_key].length - 1][VAL_IDX]) + 10
 		})
 		.visible(function(){
-			return widget_data[SP_SLOW_LOW_IDX].length
+			return widget_data[slow_low_key].length
 		})
 		
 	var series_line = vis.add(pv.Line)
-		.data(widget_data[SERIES_IDX])
+		.data(widget_data[series_key])
 		.top(function(d){
 			return y_scale(d[VAL_IDX])
 		})
@@ -230,11 +244,11 @@ function render_widget_graph(div_id, widget_conf, widget_data){
 		})
 		.lineWidth(2)
 		.visible(function(){
-			return widget_data[SERIES_IDX].length
+			return widget_data[series_key].length
 		})
 		
 	var order_line = vis.add(pv.Line)
-		.data(widget_data[ORDER_IDX])
+		.data(widget_data[order_key])
 		.top(function(d){
 			return y_scale(d[VAL_IDX])
 		})
@@ -248,7 +262,7 @@ function render_widget_graph(div_id, widget_conf, widget_data){
 		})
 		.lineWidth(2)
 		.visible(function(){
-			return widget_data[ORDER_IDX].length > 0
+			return widget_data[order_key].length > 0
 		})
 
 	vis.render()

@@ -134,55 +134,63 @@ const SP_STOP_LOW_IDX  = 3;
 const SERIES_IDX = 4;
 const ORDER_IDX = 5;
 
+// suffixes for the available data series
+const SLOW_LOW_SFX = "_slow_low";
+const SLOW_HIGH_SFX = "_slow_high";
+const STOP_LOW_SFX = "_stop_low";
+const STOP_HIGH_SFX = "_stop_high";
+const SERIES_SFX = "_series";
+const ORDER_SFX = "_order";
+
 // consts for the contents of series arrays
 const TIME_IDX = 0;
 const VAL_IDX = 1;
 
 var test_series = {
-	"premem_pressure": [
-		_.map(_.range(3600), function(i){return [i, 220]}),
-		_.map(_.range(3600), function(i){return [i, 170]}),
-		_.map(_.range(3600), function(i){return [i, 230]}),
-		_.map(_.range(3600), function(i){return [i, 160]}),
-		_.map(_.range(3600), function(i){return [i, get_random(160, 230)]}),
-		_.map(_.range(3600), function(i){return [i, 200]}),
-	],
-	"postmem_pressure": [
-		_.map(_.range(3600), function(i){return [i, 220]}),
-		_.map(_.range(3600), function(i){return [i, 170]}),
-		_.map(_.range(3600), function(i){return [i, 230]}),
-		_.map(_.range(3600), function(i){return [i, 160]}),
-		_.map(_.range(3600), function(i){return [i, get_random(160, 230)]}),
-		_.map(_.range(3600), function(i){return [i, 200]}),
-	],
-	"water_temp": [
-		_.map(_.range(3600), function(i){return [i, 38]}),
-		_.map(_.range(3600), function(i){return [i, 35]}),
-		_.map(_.range(3600), function(i){return [i, 39]}),
-		_.map(_.range(3600), function(i){return [i, 34]}),
-		_.map(_.range(3600), function(i){return [i, get_random(34, 39)]}),
-		_.map(_.range(3600), function(i){return [i, 37]}),
-	],
-	"svo2": [
-		[[0, 220], [1, 220], [2, 220], [3, 220], [4, 220], [5, 220], [6, 220], [7, 220], [8, 220], [9, 220], [10, 220]],
-		[[0, 170], [1, 170], [2, 170], [3, 170], [4, 170], [5, 170], [6, 170], [7, 170], [8, 170], [9, 170], [10, 170]],
-		[[0, 230], [1, 230], [2, 230], [3, 230], [4, 230], [5, 230], [6, 230], [7, 230], [8, 230], [9, 230], [10, 230]],
-		[[0, 160], [1, 160], [2, 160], [3, 160], [4, 160], [5, 160], [6, 160], [7, 160], [8, 160], [9, 160], [10, 160]],
-		[[0, get_random(160, 230)], [1, get_random(160, 230)], [2, get_random(160, 230)], [3, get_random(160, 230)], 
+	"premem_pressure": {
+		"premem_pressure_slow_high": _.map(_.range(3600), function(i){return [i, 220]}),
+		"premem_pressure_slow_low": _.map(_.range(3600), function(i){return [i, 170]}),
+		"premem_pressure_stop_high": _.map(_.range(3600), function(i){return [i, 230]}),
+		"premem_pressure_stop_low": _.map(_.range(3600), function(i){return [i, 160]}),
+		"premem_pressure_series": _.map(_.range(3600), function(i){return [i, get_random(160, 230)]}),
+		"premem_pressure_order": _.map(_.range(3600), function(i){return [i, 200]}),
+	},
+	"postmem_pressure": {
+		"postmem_pressure_slow_high": _.map(_.range(3600), function(i){return [i, 220]}),
+		"postmem_pressure_slow_low": _.map(_.range(3600), function(i){return [i, 170]}),
+		"postmem_pressure_stop_high": _.map(_.range(3600), function(i){return [i, 230]}),
+		"postmem_pressure_stop_low": _.map(_.range(3600), function(i){return [i, 160]}),
+		"postmem_pressure_series": _.map(_.range(3600), function(i){return [i, get_random(160, 230)]}),
+		"postmem_pressure_order": _.map(_.range(3600), function(i){return [i, 200]}),
+	},
+	"water_temp": {
+		"water_temp_slow_high": _.map(_.range(3600), function(i){return [i, 38]}),
+		"water_temp_slow_low": _.map(_.range(3600), function(i){return [i, 35]}),
+		"water_temp_stop_high": _.map(_.range(3600), function(i){return [i, 39]}),
+		"water_temp_stop_low": _.map(_.range(3600), function(i){return [i, 34]}),
+		"water_temp_series": _.map(_.range(3600), function(i){return [i, get_random(34, 39)]}),
+		"water_temp_order": _.map(_.range(3600), function(i){return [i, 37]}),
+	},
+	"svo2": {
+		"svo2_slow_high": [[0, 220], [1, 220], [2, 220], [3, 220], [4, 220], [5, 220], [6, 220], [7, 220], [8, 220], [9, 220], [10, 220]],
+		"svo2_slow_low": [[0, 170], [1, 170], [2, 170], [3, 170], [4, 170], [5, 170], [6, 170], [7, 170], [8, 170], [9, 170], [10, 170]],
+		"svo2_stop_high": [[0, 230], [1, 230], [2, 230], [3, 230], [4, 230], [5, 230], [6, 230], [7, 230], [8, 230], [9, 230], [10, 230]],
+		"svo2_stop_low": [[0, 160], [1, 160], [2, 160], [3, 160], [4, 160], [5, 160], [6, 160], [7, 160], [8, 160], [9, 160], [10, 160]],
+		"svo2_series": [[0, get_random(160, 230)], [1, get_random(160, 230)], [2, get_random(160, 230)], [3, get_random(160, 230)], 
 				[4, get_random(160, 230)], [5, get_random(160, 230)], [6, get_random(160, 230)], [7, get_random(160, 230)], 
 				[8, get_random(160, 230)], [9, get_random(160, 230)], [10, get_random(160, 230)]],
-		[[0, 200], [1, 200], [2, 200], [3, 200], [4, 200], [5, 200], [6, 200], [7, 200], [8, 200], [9, 200], [10, 200]],
-	],
-	"sao2": [
-		[[0, 220], [1, 220], [2, 220], [3, 220], [4, 220], [5, 220], [6, 220], [7, 220], [8, 220], [9, 220], [10, 220]],
-		[[0, 170], [1, 170], [2, 170], [3, 170], [4, 170], [5, 170], [6, 170], [7, 170], [8, 170], [9, 170], [10, 170]],
-		[[0, 230], [1, 230], [2, 230], [3, 230], [4, 230], [5, 230], [6, 230], [7, 230], [8, 230], [9, 230], [10, 230]],
-		[[0, 160], [1, 160], [2, 160], [3, 160], [4, 160], [5, 160], [6, 160], [7, 160], [8, 160], [9, 160], [10, 160]],
-		[[0, get_random(160, 230)], [1, get_random(160, 230)], [2, get_random(160, 230)], [3, get_random(160, 230)], 
+		"svo2_order": [[0, 200], [1, 200], [2, 200], [3, 200], [4, 200], [5, 200], [6, 200], [7, 200], [8, 200], [9, 200], [10, 200]],
+	},
+	"sao2": {
+		"sao2_slow_high": [[0, 220], [1, 220], [2, 220], [3, 220], [4, 220], [5, 220], [6, 220], [7, 220], [8, 220], [9, 220], [10, 220]],
+		"sao2_slow_low": [[0, 170], [1, 170], [2, 170], [3, 170], [4, 170], [5, 170], [6, 170], [7, 170], [8, 170], [9, 170], [10, 170]],
+		"sao2_stop_high": [[0, 230], [1, 230], [2, 230], [3, 230], [4, 230], [5, 230], [6, 230], [7, 230], [8, 230], [9, 230], [10, 230]],
+		"sao2_stop_low": [[0, 160], [1, 160], [2, 160], [3, 160], [4, 160], [5, 160], [6, 160], [7, 160], [8, 160], [9, 160], [10, 160]],
+		"sao2_series": [[0, get_random(160, 230)], [1, get_random(160, 230)], [2, get_random(160, 230)], [3, get_random(160, 230)], 
 				[4, get_random(160, 230)], [5, get_random(160, 230)], [6, get_random(160, 230)], [7, get_random(160, 230)], 
 				[8, get_random(160, 230)], [9, get_random(160, 230)], [10, get_random(160, 230)]],
-		[[0, 200], [1, 200], [2, 200], [3, 200], [4, 200], [5, 200], [6, 200], [7, 200], [8, 200], [9, 200], [10, 200]],
-	],
+		"sao2_order": [[0, 200], [1, 200], [2, 200], [3, 200], [4, 200], [5, 200], [6, 200], [7, 200], [8, 200], [9, 200], [10, 200]],
+	},
 }
 
 	
