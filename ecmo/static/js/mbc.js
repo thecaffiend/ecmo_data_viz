@@ -78,5 +78,9 @@ function on_command(msg){
             return this.parentNode; 
             })
         })
+    }else if(msg.points && msg.points.length){
+        $.each(msg.points, function(idx, point){
+            $('#feed-' + point.feed).val(point.val)
+        })
     }
 }
