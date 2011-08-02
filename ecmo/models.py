@@ -29,7 +29,7 @@ class Run(models.Model):
         return points
 
     @property
-    def points_key(self):
+    def raw_points_key(self):
         return 'points-%s' % self.id
 
 class FeedType(models.Model):

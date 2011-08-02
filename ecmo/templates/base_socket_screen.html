@@ -1,0 +1,15 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<textarea id="output">
+    data will show up here
+</textarea>
+{% endblock %}
+
+{% block extrahead %}
+<script type="text/javascript" src="{{ STATIC_URL }}js/lib/json/json2.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/lib/jquery-1.6.2.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/lib/jquery.websocket-0.0.1.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/sock_util.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/base_socket.js"></script>
+{% endblock %}

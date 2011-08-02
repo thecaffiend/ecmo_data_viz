@@ -5,7 +5,44 @@ from django.core.cache import cache
 import math
 import time
 
+from copy import deepcopy
+
 from ecmo.models import *
+
+@require_websocket
+def screen_socket(request, screen_name, run_id):
+    """
+    The main end user socket. Doesn't really accept anything.
+    """
+    
+    run = Run.objects.get(id=run_id)
+    screen = Screen.objects.get(js_name=screen_name)
+    ws = request.websocket
+    
+    widgets = screen.widget_set.all()
+    
+    used_widgets = dict([(w.widget_type.js_name, w.widget_type) for w in widgets])
+    
+    ss_base = {}
+    p_ss_map = {}
+    
+    for wt_js, wt in used_widget.items():
+        for ws in wt.widgetseries_set.all():
+            ss_base.setdefault(wt_js, {})[ws.js_name] = []
+            p_ss_map[ws.feed_type.js_name] = (wt_js, ws.js_name)
+    
+    while True:
+        points = cache.get(run.raw_points_key)
+        if points and points['points'] and points['run_time'] != last_sent:
+            
+            screen_struct = deepcopy(ss_base)
+            for p in points['points']:
+                p_map = p_ss_map[p['feed']]
+                screen_struct[p_map[0]][p_map[1]] = [points['run_time'], p['val']] 
+            
+            ws.send(jsjson(screen_struct))
+            last_sent = points['run_time']
+        time.sleep(.25)
 
 @require_websocket
 def mbc_command(request, run_id):
@@ -34,7 +71,7 @@ def mbc_command(request, run_id):
     last_sent = None
     
     while True:
-        points = cache.get(run.points_key)
+        points = cache.get(run.raw_points_key)
         if points and points['points'] and points['run_time'] != last_sent:
             ws.send(jsjson({'points':points['points']}))
             last_sent = points['run_time']
@@ -113,7 +150,7 @@ def mbc_clock(request, run_id):
                 points = run.update_feeds()
                 
                 # send this up so other listeners can hear
-                cache.set(run.points_key, {'run_time': run.run_time, 'points': [p.msg for p in points]})
+                cache.set(run.raw_points_key, {'run_time': run.run_time, 'points': [p.msg for p in points]})
                 
                 sleep_time = time.time()
                 # attempt to counter drift

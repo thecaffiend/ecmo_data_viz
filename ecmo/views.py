@@ -53,4 +53,7 @@ def man_behind_curtain(request, run_id=None):
         template += "_all"
     return render_to_response(template+'.html', RequestContext(request, ctxt))
 
+def screen(request, screen_name, run_id):
+    return render_to_response('base_socket_screen.html', RequestContext(request, {}))
+
 from sockets import *

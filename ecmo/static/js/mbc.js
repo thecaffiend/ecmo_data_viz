@@ -50,9 +50,6 @@ $(function(){
     
 });
 
-function send(ws, obj){
-    ws.send(JSON.stringify(obj));
-}
 
 function init_sockets(){
     clock = new WebSocket(ws_uri('clock'));
@@ -62,9 +59,6 @@ function init_sockets(){
     cmd.onmessage = function(e){on_command(JSON.parse(e.data))};
 }
 
-function ws_uri(socket){
-    return document.URL.replace('http://','ws://')+"/"+socket;
-}
 
 function on_tick(msg){
     tick = msg.run_time;
