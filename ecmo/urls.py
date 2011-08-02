@@ -8,6 +8,8 @@ urlpatterns = patterns('ecmo_data_viz.ecmo.views',
     (r'^pressure_graph/$', 'pressure_graph_view'),
     (r'^trend_symbol/$', 'trend_symbol_view'),
     
+    (r'^widget_confs/json/$', 'widget_confs_json'),
+    
     (r'^man_behind_curtain/(\d{,4})?$', 'man_behind_curtain'),
     (r'^man_behind_curtain/(\d{,4})/command$', 'mbc_command'),
     (r'^man_behind_curtain/(\d{,4})/clock$', 'mbc_clock'),
