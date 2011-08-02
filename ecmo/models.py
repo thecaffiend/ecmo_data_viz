@@ -153,6 +153,13 @@ class ScreenRegion(models.Model):
     def __unicode__(self):
         return self.js_name
 
+WIDGET_SYMBOLS = (("P", "Pressure"),
+                  ("S", "Saturation"),
+                  ("T", "Temperature"),)
+
+MEASURAND_UNITS = (("mmHG", "mm Mercury"),
+                  ("oC", "Degrees Celsius"),
+                  ("%", "Percent"),)
 
 class WidgetType(models.Model):
     """
@@ -161,6 +168,11 @@ class WidgetType(models.Model):
     label = models.CharField(max_length=64,
         help_text="the label that will be shown along with a widget")
     js_name = models.CharField(max_length=32, unique=True)
+    symbol = models.CharField(max_length=3, choices=WIDGET_SYMBOLS)
+    unit = models.CharField(max_length=5, choices=MEASURAND_UNITS)
+    
+    def __unicode__(self):
+        return "%s: %s" % (self.label, self.unit)
     
 
 class WidgetSeries(models.Model):
