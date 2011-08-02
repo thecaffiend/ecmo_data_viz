@@ -1,0 +1,67 @@
+{% extends "admin/base_site.html" %}
+{% block title %}Pay no attention...{% endblock %}
+
+
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+        <strong>{{run}}</strong>
+        <a href="." style="float:right;">All Runs</a>
+    </div>
+{% endblock %}
+{% block content %}
+    <input type="hidden" id="run_id" value="{{run.id}}"/>
+    <p>
+        <label for="run_time">Run Time</label>
+        <input id="run_time" disabled="disabled" value="{{run.run_time}}"/>
+        <button id="toggle_running">Resume</button>
+        <br/>
+        <input id="run_time_set"/>
+        <button id="set_time">Set</button>
+    </p>
+    {% for feed in run.feed_set.all %}
+    <fieldset class="feed" id="{{feed.js_name}}">
+        <legend>{{feed.feed_type.label}}</legend>
+        <p>
+            <label for="feed-{{feed.js_name}}">Current</label>
+            <input id="feed-{{feed.js_name}}" disabled="disabled"/>
+        </p>
+        <table>
+            <thead><tr>
+                <th colspan="2">Run Time</th>
+                <th>Dist</th>
+                <th>Value/Min/Mean</th>
+                <th>Max/Stddev</th>
+            </tr></thead>
+            <tbody>
+                <tr>
+                    <td><button>+</button></td>
+                    <td><input class="run_time"/></td>
+                    <td><select>
+                        {% for evtt, evtt_label in event_types.items %}
+                        <option value="{{evtt}}">{{evtt}}</option>
+                        {% endfor %}
+                        </select></td>
+                    <td><input class="value"/></td>
+                    <td><input class="arg"/></td>
+                </tr>
+                {% for evt in feed.feedevent_set.all %}
+                <tr>
+                    <td colspan="2">{{evt.run_time}}</td>
+                    <td>{{evt.distribution}}</td>
+                    <td>{{evt.value}}</td>
+                    <td>{{evt.arg}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </fieldset>
+    {% endfor %}
+{% endblock %}
+
+
+{% block extrahead %}
+<script type="text/javascript" src="{{ STATIC_URL }}js/lib/json/json2.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/lib/jquery-1.6.2.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/lib/jquery.websocket-0.0.1.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/mbc.js"></script>
+{% endblock %}

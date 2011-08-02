@@ -1,0 +1,29 @@
+{% extends "admin/base_site.html" %}
+{% block title %}Pay no attention...{% endblock %}
+
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+        <a href="/admin">Back to Admin</a>
+    </div>
+{% endblock %}
+
+{% block content %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Run</th>
+                    <th>Start Time</th>
+                    <th>Run Time</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for run in runs %}
+            <tr>
+                <td><a href="./{{run.id}}">{{run.name}}</a></td>
+                <td>{{run.start}}</td>
+                <td>{{run.run_time}}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+{% endblock %}
