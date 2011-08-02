@@ -27,7 +27,7 @@ def widget_view(request):
     return render_to_response('ecmo_widget.html', {})
 
 def man_behind_curtain(request, run_id=None):
-    ctxt = {'event_types': dict(EVT_DISTRIBUTIONS)}
+    ctxt = {'event_types': dict(EVT_DISTRIBUTIONS), 'trend_types': dict(EVT_TRENDS)}
     template = 'man_behind_curtain'
     if run_id:
         ctxt['run'] = Run.objects.get(id=run_id)
@@ -38,23 +38,44 @@ def man_behind_curtain(request, run_id=None):
 
 
 @require_websocket
-def mbc_socket(request, run_id):
+def mbc_command(request, run_id):
     """
-    The main MBC socket. Used for creating new FeedEvents. Gives
+    The main MBC socket. Used for creating new (and deleting old) FeedEvents. Gives
     the current value.
     
     Accepts: {  feed: <js_name>,
                 value: <value or min or mean>,
                 arg: <max or stddev>,
                 run_time: <int>,
-                dist:   NRM|UNI|SET
+                distribution:   one of EVT_DISTRIBUTIONS,
+                trend:   one of EVT_TRENDS
                 }
+                    or
+            {   delete: <event_id>}
     
-    Returns:    {feed: <float>, run_time}
+    Returns:    {feed: <float>, run_time: <int>}
+                    or
+                {events: [<above struct, plus id>,]}
+                
     """
-    for msg in request.websocket:
+    
+    run = Run.objects.get(id=run_id)
+    ws = request.websocket
+    
+    for msg in ws:
         msg = simplejson.loads(msg)
-        request.websocket.send(jsjson(msg))
+        for feed in run.feed_set.all():
+            if feed.feed_type.js_name == msg['feed']:
+                msg['feed'] = feed
+                try:
+                    event = FeedEvent(**msg)
+                    event.full_clean()
+                    event.save()
+                    ws.send(jsjson({'events':[event.msg]}))
+                except Exception, e:
+                    print "bad", e
+                break
+        #ws.send(jsjson(msg))
 
 import time
 

@@ -4,7 +4,7 @@
 
 {% block breadcrumbs %}
     <div class="breadcrumbs">
-        <strong>{{run}}</strong>
+        <strong><a href="/admin/ecmo/run/{{run.id}}">{{run}}</a></strong>
         <a href="." style="float:right;">All Runs</a>
     </div>
 {% endblock %}
@@ -19,49 +19,72 @@
         <button id="set_time">Set</button>
     </p>
     {% for feed in run.feed_set.all %}
-    <fieldset class="feed" id="{{feed.js_name}}">
-        <legend>{{feed.feed_type.label}}</legend>
+    <fieldset class="feed" id="{{feed.feed_type.js_name}}">
+        <legend><a href="/admin/ecmo/feed/{{feed.id}}">{{feed.feed_type.label}}</a></legend>
         <p>
             <label for="feed-{{feed.js_name}}">Current</label>
             <input id="feed-{{feed.js_name}}" disabled="disabled"/>
         </p>
         <table>
             <thead><tr>
-                <th colspan="2">Run Time</th>
+                <th>Do</th>
+                <th>Run Time</th>
                 <th>Dist</th>
                 <th>Value/Min/Mean</th>
                 <th>Max/Stddev</th>
+                <th>Trend</th>
             </tr></thead>
             <tbody>
-                <tr>
-                    <td><button>+</button></td>
+                <tr class="event">
+                    <td><button class="add">+</button></td>
                     <td><input class="run_time"/></td>
-                    <td><select>
+                    <td><select class="dist">
                         {% for evtt, evtt_label in event_types.items %}
-                        <option value="{{evtt}}">{{evtt}}</option>
+                        <option value="{{evtt}}">{{evtt_label}}</option>
                         {% endfor %}
                         </select></td>
                     <td><input class="value"/></td>
                     <td><input class="arg"/></td>
+                    <td><select class="trend">
+                        <option></option>
+                        {% for trnd, trnd_label in trend_types.items %}
+                        <option value="{{trnd}}">{{trnd_label}}</option>
+                        {% endfor %}
+                        </select></td>
                 </tr>
                 {% for evt in feed.feedevent_set.all %}
-                <tr>
-                    <td colspan="2">{{evt.run_time}}</td>
+                <tr class="event" id="event-{{evt.id}}">
+                    <td><button class="remove">-</button></td>
+                    <td class="sort">{{evt.run_time}}</td>
                     <td>{{evt.distribution}}</td>
                     <td>{{evt.value}}</td>
                     <td>{{evt.arg}}</td>
+                    <td>{{evt.trend}}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </fieldset>
     {% endfor %}
+    <script id="eventTemplate" type="text/x-jquery-tmpl">
+        <tr class="event" id="event-${id}">
+            <td><button class="remove">-</button></td>
+            <td class="sort">${run_time}</td>
+            <td>${distribution}</td>
+            <td>${value}</td>
+            <td>${arg}</td>
+            <td>${trend}</td>
+        </tr>
+    </script>
 {% endblock %}
 
 
 {% block extrahead %}
 <script type="text/javascript" src="{{ STATIC_URL }}js/lib/json/json2.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}js/lib/jquery-1.6.2.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/lib/jquery.tmpl.min.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}js/lib/jquery.websocket-0.0.1.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/lib/sortElements.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}js/mbc.js"></script>
+<link rel="stylesheet" type="text/css" href="/static/css/mbc.css" /> 
 {% endblock %}
