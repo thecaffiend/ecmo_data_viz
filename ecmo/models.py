@@ -106,7 +106,7 @@ class FeedEvent(models.Model):
         
     def save(self, *args, **kwargs):
         super(FeedEvent, self).save(*args, **kwargs) # Call the "real" save() method.
-        self.feed.feedpoint_set.filter(run_time__gte=self.run_time).delete(), "deleted"
+        self.feed.feedpoint_set.filter(run_time__gte=self.run_time).delete()
             
     def generate_value(self, run_time):
         dists = {
