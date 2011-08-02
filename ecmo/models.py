@@ -1,5 +1,9 @@
 from django.db import models
 
+import numpy.random as random
+import numpy as np
+
+
 class Run(models.Model):
     """
     A single ECMO run.
@@ -23,7 +27,8 @@ class Run(models.Model):
             try:
                 point = feed.feedpoint_set.get(run_time=self.run_time)
             except:
-                point = FeedPoint.generate(feed, self.run_time, feed.next_event(self.run_time))
+                next_event, trend_event = feed.next_event(self.run_time)
+                point = FeedPoint.generate(feed, self.run_time, next_event, trend_event)
                 point.save()
             points.append(point)
         return points
@@ -58,8 +63,15 @@ class Feed(models.Model):
     
     def next_event(self, run_time):
         try:
-            return self.feedevent_set.filter(run_time__lte=run_time).order_by('-run_time')[0]
+            events = self.feedevent_set.filter(run_time__lte=run_time).order_by('-run_time')
+            if events[0].trend:
+                return (events[0], events[1])
+            else:
+                return (events[0], None)
+            
         except:
+            if events:
+                return (events[0], None)
             return None
             
 
@@ -78,8 +90,6 @@ TND_LNR = 'LNR'
 EVT_TRENDS = (
     (TND_LNR, 'Linear'),
 )
-
-import random
 
 class FeedEvent(models.Model):
     """
@@ -108,13 +118,31 @@ class FeedEvent(models.Model):
         super(FeedEvent, self).save(*args, **kwargs) # Call the "real" save() method.
         self.feed.feedpoint_set.filter(run_time__gte=self.run_time).delete()
             
-    def generate_value(self, run_time):
+    def generate_value(self, run_time, trend_event=None):
+        
+        to_dist = {
+            'value': self.value,
+            'arg': self.arg
+        }
+        
+        if False: #self.trend:
+            interp = {
+                TND_LNR: lambda ax, ay, bx, by: np.interp(run_time, [ax,bx], [ay, by])
+            }
+            for par in to_dist:
+                to_dist[par] = interp[self.trend](
+                    self.run_time,
+                    getattr(self, par), 
+                    trend_event.run_time,
+                    getattr(trend_event, par)
+                )
+        
         dists = {
             DIST_SET: lambda value, a: v,
-            DIST_NRM: lambda mu, sigma: random.gauss(mu, sigma),
+            DIST_NRM: lambda mu, sigma: random.normal(mu, sigma),
             DIST_UNI: lambda min_v, max_v: random.uniform(min_v, max_v) 
         }
-        return dists[self.distribution](self.value, self.arg)
+        return dists[self.distribution](*to_dist.values())
 
 
 class FeedPoint(models.Model):
@@ -136,7 +164,7 @@ class FeedPoint(models.Model):
             "feed": feed
         }
         if event:
-            args['value'] = event.generate_value(run_time)
+            args['value'] = event[0].generate_value(run_time, event)
         else:
             args['value'] = 0
         point = FeedPoint(**args)
@@ -212,6 +240,9 @@ class WidgetSeries(models.Model):
     
     class Meta:
         unique_together = ('widget_type', 'js_name')
+
+    def __unicode__(self):
+        return "%s: %s" % (self.widget_type, self.feed_type)
 
 
 class Widget(models.Model):
