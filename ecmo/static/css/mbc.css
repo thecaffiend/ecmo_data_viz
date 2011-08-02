@@ -1,0 +1,9 @@
+table input{
+  width: 40px;
+}
+
+.feed{
+  float:left;
+  padding: 5px;
+  border: solid 1px #999;
+}

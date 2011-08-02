@@ -41,14 +41,20 @@ class Feed(models.Model):
     class Meta:
         unique_together = ('feed_type', 'run')
 
-EVT_SET = 'SET'
-EVT_NRM = 'NRM'
-EVT_UNI = 'UNI'
+DIST_SET = 'SET'
+DIST_NRM = 'NRM'
+DIST_UNI = 'UNI'
 
 EVT_DISTRIBUTIONS = (
-    (EVT_SET, 'Set value (val=val, arg=ignored)'),
-    (EVT_NRM, 'Normal (val=mean, arg=stddev)'),
-    (EVT_UNI, 'Uniform (val=min, arg=max)'),
+    (DIST_SET, 'Set value (val=val, arg=ignored)'),
+    (DIST_NRM, 'Normal (val=mean, arg=stddev)'),
+    (DIST_UNI, 'Uniform (val=min, arg=max)'),
+)
+
+TND_LNR = 'LNR'
+
+EVT_TRENDS = (
+    (TND_LNR, 'Linear'),
 )
 
 class FeedEvent(models.Model):
@@ -61,10 +67,18 @@ class FeedEvent(models.Model):
     value = models.FloatField()
     run_time = models.IntegerField(help_text="Seconds from beginning of run.")
     distribution = models.CharField(max_length=3, choices=EVT_DISTRIBUTIONS)
-    arg = models.FloatField(null=True,blank=True)
+    arg = models.FloatField(null=True, blank=True)
+    trend = models.CharField(blank=True, null=True, choices=EVT_TRENDS, max_length=3,
+        help_text="If set, and an event exists with a greater run_time, the intervening values will be interpolated")
     
     class Meta:
         unique_together = ('feed', 'run_time')
+
+    @property
+    def msg(self):
+        dct = dict([(k,v) for k,v in self.__dict__.items() if k[0] != '_'])
+        dct['feed'] = self.feed.feed_type.js_name
+        return dct
 
 
 class FeedPoint(models.Model):
