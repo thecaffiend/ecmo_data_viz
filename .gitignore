@@ -5,3 +5,4 @@
 .pydevproject
 *.sqlite
 *.bak
+.DS_Store
