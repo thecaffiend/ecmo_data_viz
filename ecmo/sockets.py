@@ -9,6 +9,8 @@ from copy import deepcopy
 
 from ecmo.models import *
 
+import sys
+
 @require_websocket
 def screen_socket(request, screen_name, run_id):
     """
@@ -75,15 +77,16 @@ def mbc_command(request, run_id):
         if points and points['points'] and points['run_time'] != last_sent:
             ws.send(jsjson({'points':points['points']}))
             last_sent = points['run_time']
-        while ws.has_messages():
-            msg = simplejson.loads(ws.read())
-            if msg['delete']:
+        if ws.has_messages():
+            msg = ws.read()
+            msg = simplejson.loads(msg)
+            if msg.get('delete', False):
                 try:
                     FeedEvent.objects.get(id=msg['delete']).delete()
                     ws.send(jsjson(msg))
                 except:
-                    print "bad delete", e
-            else:
+                    sys.stderr.write("bad delete %s" % e)
+            if msg.get('feed', False):
                 for feed in run.feed_set.all():
                     if feed.feed_type.js_name == msg['feed']:
                         msg['feed'] = feed
@@ -93,8 +96,7 @@ def mbc_command(request, run_id):
                             event.save()
                             ws.send(jsjson({'events':[event.msg]}))
                         except Exception, e:
-                            print "bad insert", e
-                        break
+                            sys.stderr.write("bad insert %s" % e)
         time.sleep(.25)
 
 # DRY would put this in a JSON file that python can use, too

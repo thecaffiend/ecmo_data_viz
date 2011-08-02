@@ -52,6 +52,9 @@ class Feed(models.Model):
     
     class Meta:
         unique_together = ('feed_type', 'run')
+        
+    def __unicode__(self):
+        return '%s: %s' % (self.run, self.feed_type)
     
     def next_event(self, run_time):
         try:
@@ -100,7 +103,11 @@ class FeedEvent(models.Model):
         dct = dict([(k,v) for k,v in self.__dict__.items() if k[0] != '_'])
         dct['feed'] = self.feed.feed_type.js_name
         return dct
-    
+        
+    def save(self, *args, **kwargs):
+        super(FeedEvent, self).save(*args, **kwargs) # Call the "real" save() method.
+        self.feed.feedpoint_set.filter(run_time__gte=self.run_time).delete(), "deleted"
+            
     def generate_value(self, run_time):
         dists = {
             DIST_SET: lambda value, a: v,
