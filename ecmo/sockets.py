@@ -1,7 +1,9 @@
 from django_websocket import require_websocket
 from django.utils import simplejson
+from django.core.cache import cache
 
 import math
+import time
 
 from ecmo.models import *
 
@@ -21,7 +23,7 @@ def mbc_command(request, run_id):
                     or
             {   delete: <event_id>}
     
-    Returns:    {feed: <float>, run_time: <int>}
+    Returns:    {points: [{feed: <feed_name>, val:<float>}]}
                     or
                 {events: [<above struct, plus id>,]}
                 
@@ -30,22 +32,24 @@ def mbc_command(request, run_id):
     run = Run.objects.get(id=run_id)
     ws = request.websocket
     
-    for msg in ws:
-        msg = simplejson.loads(msg)
-        for feed in run.feed_set.all():
-            if feed.feed_type.js_name == msg['feed']:
-                msg['feed'] = feed
-                try:
-                    event = FeedEvent(**msg)
-                    event.full_clean()
-                    event.save()
-                    ws.send(jsjson({'events':[event.msg]}))
-                except Exception, e:
-                    print "bad", e
-                break
-        #ws.send(jsjson(msg))
-
-import time
+    while True:
+        points = cache.get(run.points_key)
+        if points:
+            ws.send(jsjson({'points':points}))
+        if ws.has_messages():
+            msg = simplejson.loads(ws.read())
+            for feed in run.feed_set.all():
+                if feed.feed_type.js_name == msg['feed']:
+                    msg['feed'] = feed
+                    try:
+                        event = FeedEvent(**msg)
+                        event.full_clean()
+                        event.save()
+                        ws.send(jsjson({'events':[event.msg]}))
+                    except Exception, e:
+                        print "bad", e
+                    break
+        time.sleep(.25)
 
 # DRY would put this in a JSON file that python can use, too
 CLK_RESUME = 0
@@ -98,8 +102,9 @@ def mbc_clock(request, run_id):
                 
                 # generates all the new points
                 points = run.update_feeds()
-                #if points:
-                #    ws.send(jsjson({"points":points))
+                
+                # send this up so other listeners can hear
+                cache.set(run.points_key, [p.msg for p in points])
                 
                 sleep_time = time.time()
                 # attempt to counter drift

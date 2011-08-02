@@ -28,6 +28,10 @@ class Run(models.Model):
             points.append(point)
         return points
 
+    @property
+    def points_key(self):
+        return 'points-%s' % self.id
+
 class FeedType(models.Model):
     label = models.CharField(max_length=64)
     js_name = models.SlugField(max_length=32, unique=True)
@@ -113,6 +117,10 @@ class FeedPoint(models.Model):
     
     class Meta:
         unique_together = ('feed', 'run_time')
+    
+    @property
+    def msg(self):
+        return {'val': self.value, 'feed': self.feed.feed_type.js_name}
     
     @staticmethod
     def generate(feed, run_time, event):
