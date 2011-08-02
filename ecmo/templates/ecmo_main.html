@@ -191,14 +191,15 @@ var configs = null;
 
 function create_widget_div(conf){
 	var widget = $('<div/>',{
-        id: conf.div_id,
+        id: conf.div_id + "-" + conf.container + "-" + conf.pos,
         'class': 'widget'
     })
     
     // loop over (title, trend, main)
     $.each(['label', 'trend', 'graph'], function(idx, div_type){
         $(widget).append($('<div/>',{
-            id: conf.div_id + '_' + div_type,
+        	// be sure to get the id of the widget as the base for this div's id
+            id: $(widget).attr('id') + '-' + div_type,
             'class': div_type
         }))
         // generate the protovis pieces for (title, trend, main)
@@ -213,17 +214,17 @@ function create_widget_div(conf){
 }
 
 function render_widget(widget_conf, widget_data){
-	render_widget_graph(widget_conf.div_id+"_graph", widget_conf, widget_data);
-	render_widget_trend(widget_conf.div_id+"_trend", widget_conf, widget_data);
-	render_widget_label(widget_conf.div_id+"_label", widget_conf, widget_data)
+	var widget_div_id = widget_conf.div_id + "-" + widget_conf.container + "-" + widget_conf.pos
+	render_widget_graph(widget_div_id+"-graph", widget_conf, widget_data);
+	render_widget_trend(widget_div_id+"-trend", widget_conf, widget_data);
+	render_widget_label(widget_div_id+"-label", widget_conf, widget_data)
 }
      		
 $(document).ready(function() {
 	$.get(data_url, function(fetched_configs){
         configs = fetched_configs
         $.each(configs, function(idx, conf){
-        	console.log(conf)
-			create_widget_div(conf)
+        	create_widget_div(conf)
 			render_widget(conf, test_series[conf.div_id])
 		})
     })
@@ -239,7 +240,7 @@ $(document).ready(function() {
 <div class="outer">
 <div id="db_T" class="widget_row"></div>
 <div id="db_L" class="widget_col_left"></div>
-<div id="db_" class="viz_center"></div>
+<div id="db_C" class="viz_center"></div>
 <div id="db_R" class="widget_col_right"></div>
 <div id="db_B" class="widget_row"></div>
 </div>
