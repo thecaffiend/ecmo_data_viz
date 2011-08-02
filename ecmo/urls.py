@@ -10,12 +10,12 @@ urlpatterns = patterns('ecmo_data_viz.ecmo.views',
     
     (r'^widget_confs/json/$', 'widget_confs_json'),
     
-    (r'^screen/([^/]*)/(\d{,4})/socket$', 'screen_socket'),
-    (r'^screen/([^/]*)/(\d{,4})$', 'screen'),
+    (r'^screen/([^/]+)/(\d+)/socket$', 'screen_socket'),
+    (r'^screen/([^/]+)/(\d+)$', 'screen'),
+    (r'^screen/([^/]+)/(\d+)/data/(\d+)$', 'screen_data'),
     
-    
-    (r'^man_behind_curtain/(\d{,4})?$', 'man_behind_curtain'),
-    (r'^man_behind_curtain/(\d{,4})/command$', 'mbc_command'),
-    (r'^man_behind_curtain/(\d{,4})/clock$', 'mbc_clock'),
+    (r'^man_behind_curtain/(\d+)?$', 'man_behind_curtain'),
+    (r'^man_behind_curtain/(\d+)/command$', 'mbc_command'),
+    (r'^man_behind_curtain/(\d+)/clock$', 'mbc_clock'),
 )
 

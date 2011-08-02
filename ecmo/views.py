@@ -43,6 +43,36 @@ def widget_confs_json(request):
         widget_confs.append(w)
     return JsonResponse(widget_confs)
 
+def screen_data(request, screen_name, run_id, min_back):
+    screen = Screen.objects.get(js_name=screen_name)
+    run = Run.objects.get(id=run_id)
+    min_back = int(min_back)
+    
+    # get the baseline structure and mapping from feed_type.js_name to (widget, series)
+    screen_struct, point_ss_map = screen.struct_base_map()
+    
+    for feed in run.feed_set.all():
+        feed_js = feed.feed_type.js_name
+        p_map = point_ss_map[feed_js]
+        
+        try:
+            screen_struct[p_map[0]][p_map[1]] = []
+            points = list(feed.feedpoint_set.order_by('run_time'))
+            last_point = points[-1]
+            # not enough... need to generate more
+            if last_point.run_time < min_back:
+                points.extend(map(
+                    lambda rt: FeedPoint.generate(feed, rt, feed.next_event(rt), save=True),
+                    range(last_point.run_time + 1, min_back)
+                ))
+            screen_struct[p_map[0]][p_map[1]] = [[p.run_time, p.value] for p in points]
+        except KeyError:
+            # expected: not all data from a run will neccessarily be used in a screen
+            pass
+                
+    return JsonResponse(screen_struct)
+    
+
 def man_behind_curtain(request, run_id=None):
     ctxt = {'event_types': dict(EVT_DISTRIBUTIONS), 'trend_types': dict(EVT_TRENDS)}
     template = 'man_behind_curtain'

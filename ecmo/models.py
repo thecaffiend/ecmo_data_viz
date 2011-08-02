@@ -130,7 +130,7 @@ class FeedPoint(models.Model):
         return {'val': self.value, 'feed': self.feed.feed_type.js_name}
     
     @staticmethod
-    def generate(feed, run_time, event):
+    def generate(feed, run_time, event, save=False):
         args = {
             "run_time": run_time,
             "feed": feed
@@ -161,6 +161,17 @@ class Screen(models.Model):
     def __unicode__(self):
         return self.label
     
+    def struct_base_map(self):
+        ss_base = {}
+        point_ss_map = {}
+        
+        used_widgets = dict([(w.widget_type.js_name, w.widget_type) for w in self.widget_set.all()])
+
+        for wt_js, wt in used_widgets.items():
+            for wser in wt.widgetseries_set.all():
+                ss_base.setdefault(wt_js, {})[wser.js_name] = []
+                point_ss_map[wser.feed_type.js_name] = (wt_js, wser.js_name)
+        return ss_base, point_ss_map
 
 class ScreenRegion(models.Model):
     js_name = models.SlugField(max_length=32, unique=True)

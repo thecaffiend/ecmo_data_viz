@@ -24,17 +24,7 @@ def screen_socket(request, screen_name, run_id):
     screen = Screen.objects.get(js_name=screen_name)
     ws = request.websocket
     
-    widgets = screen.widget_set.all()
-    
-    used_widgets = dict([(w.widget_type.js_name, w.widget_type) for w in widgets])
-    
-    ss_base = {}
-    p_ss_map = {}
-    
-    for wt_js, wt in used_widgets.items():
-        for wser in wt.widgetseries_set.all():
-            ss_base.setdefault(wt_js, {})[wser.js_name] = []
-            p_ss_map[wser.feed_type.js_name] = (wt_js, wser.js_name)
+    ss_base, point_ss_map = screen.struct_base_map()
     
     last_sent = None
     
@@ -44,7 +34,7 @@ def screen_socket(request, screen_name, run_id):
             run_time = points['run_time']
             screen_struct = deepcopy(ss_base)
             for p in points['points']:
-                p_map = p_ss_map[p['feed']]
+                p_map = point_ss_map[p['feed']]
                 screen_struct[p_map[0]][p_map[1]].append([run_time, p['val']]) 
             jstruct = jsjson(screen_struct)
             ws.send(jstruct)
