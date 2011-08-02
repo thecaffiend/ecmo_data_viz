@@ -5,19 +5,41 @@ class Run(models.Model):
     A single ECMO run.
     """
     start = models.DateTimeField(auto_now_add=True)
+    name = models.CharField(max_length=64)
+    run_time = models.IntegerField(default=0)
     
+    def __unicode__(self):
+        return self.name
+    
+    def update_feeds(self):
+        """
+        This is where all of the next FeedPoints should be queued.
+        This will be called from the clock thread, right before sleeping.
+        Seems like the cache should be used to keep from doing unneccessary
+        roundtrips, but maybe this just adds a layer of complexity?
+        """
+        pass
+
+class FeedType(models.Model):
+    label = models.CharField(max_length=64)
+    js_name = models.SlugField(max_length=32, unique=True)
+    min_val = models.FloatField()
+    max_val = models.FloatField()
+    
+    def __unicode__(self):
+        return self.label
+
+
 class Feed(models.Model):
     """
     A datafeed relating to a run: either a sensor, set point or
     some sort.
     """
-    js_name = models.SlugField(max_length=32)
+    feed_type = models.ForeignKey(FeedType)
     run = models.ForeignKey(Run)
-    min_val = models.FloatField()
-    max_val = models.FloatField()
     
     class Meta:
-        unique_together = ('js_name', 'run')
+        unique_together = ('feed_type', 'run')
 
 EVT_SET = 'SET'
 EVT_NRM = 'NRM'
@@ -32,19 +54,21 @@ EVT_DISTRIBUTIONS = (
 class FeedEvent(models.Model):
     """
     The script of the feed. When generating feed points,
-    these will be used to generate the value until the 
+    these will be used to generate the value until the
     next feed event is encountered.
     """
     feed = models.ForeignKey(Feed)
     value = models.FloatField()
     run_time = models.IntegerField(help_text="Seconds from beginning of run.")
     distribution = models.CharField(max_length=3, choices=EVT_DISTRIBUTIONS)
+    arg = models.FloatField(null=True,blank=True)
     
     class Meta:
         unique_together = ('feed', 'run_time')
 
+
 class FeedPoint(models.Model):
-    feed = models.ForeignKey(Feed) 
+    feed = models.ForeignKey(Feed)
     run_time = models.IntegerField(help_text="Seconds from beginning of run.")
     value = models.FloatField()
     
@@ -66,8 +90,10 @@ class Screen(models.Model):
     regions = models.ManyToManyField("ScreenRegion")
     template = models.SlugField(max_length=32, choices=TEMPLATES)
     
+
 class ScreenRegion(models.Model):
     js_name = models.SlugField(max_length=32, unique=True)
+
 
 class WidgetType(models.Model):
     """
@@ -77,6 +103,7 @@ class WidgetType(models.Model):
         help_text="the label that will be shown along with a widget")
     js_name = models.CharField(max_length=32, unique=True)
     
+
 class WidgetSeries(models.Model):
     """
     A timestamped series of data on a widget.
@@ -87,6 +114,7 @@ class WidgetSeries(models.Model):
     
     class Meta:
         unique_together = ('widget_type', 'js_name')
+
 
 class Widget(models.Model):
     """
@@ -99,7 +127,7 @@ class Widget(models.Model):
     
     class Meta:
         unique_together = ('screen', 'region', 'position')
-    
+
 #ew.
 from django.conf import settings
 from django.contrib.auth import models as auth_models
