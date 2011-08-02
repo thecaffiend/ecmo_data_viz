@@ -53,17 +53,20 @@ def screen_data(request, screen_name, run_id, min_back):
     
     for feed in run.feed_set.all():
         feed_js = feed.feed_type.js_name
-        p_map = point_ss_map[feed_js]
         
         try:
+            p_map = point_ss_map[feed_js]
             screen_struct[p_map[0]][p_map[1]] = []
             points = list(feed.feedpoint_set.order_by('run_time'))
-            last_point = points[-1]
+            try:
+                last_point = points[-1].run_time
+            except:
+                last_point = -1
             # not enough... need to generate more
-            if last_point.run_time < min_back:
+            if last_point < min_back:
                 points.extend(map(
                     lambda rt: FeedPoint.generate(feed, rt, feed.next_event(rt), save=True),
-                    range(last_point.run_time + 1, min_back)
+                    range(last_point + 1, min_back)
                 ))
             screen_struct[p_map[0]][p_map[1]] = [[p.run_time, p.value] for p in points]
         except KeyError:
