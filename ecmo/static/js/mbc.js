@@ -47,7 +47,6 @@ $(function(){
 })
 
 function send(ws, obj){
-    console.log(JSON.stringify(obj))
     ws.send(JSON.stringify(obj))
 }
 
