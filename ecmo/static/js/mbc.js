@@ -17,15 +17,15 @@ $(function(){
         running = !running;
         $(this).text(running ? "Pause" : "Resume");
         send(clock,{
-            'type':running ? RESUME : PAUSE})
-    })
+            'type':running ? RESUME : PAUSE});
+    });
     
     $('#set_time').click(function(){
         send(clock,{
             'type':SET, 
             'run_time': parseInt($('#run_time_set').val())
-            })
-    })
+            });
+    });
     
     $('.feed .add').live('click', function(){
         var evt = $(this).parents('.event');
@@ -37,17 +37,21 @@ $(function(){
             run_time:       parseInt(evt.find('.run_time').val()),
             distribution:   evt.find('.dist').val(),
             trend:          evt.find('.trend').val(),
-            })
-    })
+            });
+    });
     
     $('.feed .remove').live('click', function(){
-        alert('unimplemented')
-    })
+        var evt = $(this).parents('.event');
+        var feed = $(this).parents('.feed');
+        send(cmd, {
+            delete:         parseInt(evt.attr('id').replace('event-','')),
+            });
+    });
     
-})
+});
 
 function send(ws, obj){
-    ws.send(JSON.stringify(obj))
+    ws.send(JSON.stringify(obj));
 }
 
 function init_sockets(){
@@ -59,28 +63,30 @@ function init_sockets(){
 }
 
 function ws_uri(socket){
-    return document.URL.replace('http://','ws://')+"/"+socket
+    return document.URL.replace('http://','ws://')+"/"+socket;
 }
 
 function on_tick(msg){
     tick = msg.run_time;
-    $('#run_time').val(tick)
+    $('#run_time').val(tick);
 }
 
 function on_command(msg){
     if(msg.events && msg.events.length){
         $.each(msg.events, function(idx, evt){
             $( "#eventTemplate" ).tmpl( evt )
-                    .appendTo( "#" + evt.feed + " tbody" );  
-        $('#' + evt.feed + ' td.sort').sortElements(function(a,b){
-            return parseInt($(a).text()) > parseInt($(b).text()) ? 1 : -1;
-        }, function(){
-            return this.parentNode; 
-            })
-        })
+                    .appendTo( "#" + evt.feed + " tbody" );
+            $('#' + evt.feed + ' td.sort').sortElements(function(a,b){
+                    return parseInt($(a).text()) > parseInt($(b).text()) ? 1 : -1;
+                }, function(){
+                    return this.parentNode; 
+            });
+        });
     }else if(msg.points && msg.points.length){
         $.each(msg.points, function(idx, point){
-            $('#feed-' + point.feed).val(point.val)
-        })
+            $('#feed-' + point.feed).val(point.val);
+        });
+    }else if(msg.delete){
+        $('#event-'+msg.delete).remove();
     }
 }

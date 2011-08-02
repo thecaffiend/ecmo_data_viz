@@ -31,24 +31,33 @@ def mbc_command(request, run_id):
     
     run = Run.objects.get(id=run_id)
     ws = request.websocket
+    last_sent = None
     
     while True:
         points = cache.get(run.points_key)
-        if points:
-            ws.send(jsjson({'points':points}))
-        if ws.has_messages():
+        if points and points['points'] and points['run_time'] != last_sent:
+            ws.send(jsjson({'points':points['points']}))
+            last_sent = points['run_time']
+        while ws.has_messages():
             msg = simplejson.loads(ws.read())
-            for feed in run.feed_set.all():
-                if feed.feed_type.js_name == msg['feed']:
-                    msg['feed'] = feed
-                    try:
-                        event = FeedEvent(**msg)
-                        event.full_clean()
-                        event.save()
-                        ws.send(jsjson({'events':[event.msg]}))
-                    except Exception, e:
-                        print "bad", e
-                    break
+            if msg['delete']:
+                try:
+                    FeedEvent.objects.get(id=msg['delete']).delete()
+                    ws.send(jsjson(msg))
+                except:
+                    print "bad delete", e
+            else:
+                for feed in run.feed_set.all():
+                    if feed.feed_type.js_name == msg['feed']:
+                        msg['feed'] = feed
+                        try:
+                            event = FeedEvent(**msg)
+                            event.full_clean()
+                            event.save()
+                            ws.send(jsjson({'events':[event.msg]}))
+                        except Exception, e:
+                            print "bad insert", e
+                        break
         time.sleep(.25)
 
 # DRY would put this in a JSON file that python can use, too
@@ -104,7 +113,7 @@ def mbc_clock(request, run_id):
                 points = run.update_feeds()
                 
                 # send this up so other listeners can hear
-                cache.set(run.points_key, [p.msg for p in points])
+                cache.set(run.points_key, {'run_time': run.run_time, 'points': [p.msg for p in points]})
                 
                 sleep_time = time.time()
                 # attempt to counter drift
