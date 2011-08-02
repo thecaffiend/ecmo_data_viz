@@ -12,6 +12,9 @@ function render_widget_graph(div_id, widget_conf, widget_data){
 	var order_step = (w-(w/5)) / widget_data[ORDER_IDX].length;	
 	var series_step = (w-(w/5)) / widget_data[SERIES_IDX].length;	
 	
+	// steps for adding tick marks, want one per 10 minutes
+	var tick_step = (w-(w/5)) / 6;
+	
 	// get the min and max values of the set points for the y_scale
 	// start with the stopping set points, if they don't exists, try the 
 	// slowing stop points next, if hose aren't there, try the series data with
@@ -48,17 +51,41 @@ function render_widget_graph(div_id, widget_conf, widget_data){
 		.width(function() {
 			return w
 		})
+		.fillStyle("white")
+		.event("click", function(){
+			if($("#"+div_id).hasClass("fs_graph")){
+				$("#"+div_id).removeClass("fs_graph").addClass("graph")
+			}
+			else{
+				$("#"+div_id).removeClass("graph").addClass("fs_graph")
+			}
+			vis.render()
+		})
 		
 	var top_line = vis.add(pv.Rule)
 		.bottom(1)
 		.strokeStyle('black')
 		.lineWidth(2)
+		.add(pv.Rule)
+			.data(pv.range(0, 7))
+			.top(0)
+			.left(function(){
+				return this.index * tick_step
+			})
+			.height(5)
 	
 	var bottom_line = vis.add(pv.Rule)
 		.bottom(h-1)
 		.strokeStyle('black')
 		.lineWidth(2)
-
+		.add(pv.Rule)
+			.data(pv.range(0, 7))
+			.bottom(0)
+			.left(function(){
+				return this.index * tick_step
+			})
+			.height(5)
+	
 	// upper stop setpoint line
 	var setpoint_stop_top_line = vis.add(pv.Line)
 		.data(widget_data[SP_STOP_HIGH_IDX])
