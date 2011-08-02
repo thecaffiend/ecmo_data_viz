@@ -13,39 +13,53 @@ const SECONDS_TO_SHOW = 300;
 // seconds will be merged into NUM_DATAPOINTS_SHOWN number of points
 const NUM_DATAPOINTS_SHOWN = 10;
 
+var slow_high_key = null;
+var slow_low_key = null;
+var stop_high_key = null;
+var stop_low_key = null;
+var series_key = null;
+var order_key = null;
+
 function render_widget_trend(div_id, widget_conf, widget_data){
 	var h = $("#"+div_id).height()
 	var w = $("#"+div_id).width()
-
+	
+	slow_high_key = widget_conf.div_id + SLOW_HIGH_SFX;
+	slow_low_key = widget_conf.div_id + SLOW_LOW_SFX;
+	stop_high_key = widget_conf.div_id + STOP_HIGH_SFX;
+	stop_low_key = widget_conf.div_id + STOP_LOW_SFX;
+	series_key = widget_conf.div_id + SERIES_SFX;
+	order_key = widget_conf.div_id + ORDER_SFX;
+	
 	// square will always be half the available height. if there is a 
 	// triangle, it will take up the remaining half
 	var half_height = h/2
 	// centers the square
 	var square_left = (w - half_height) / 2	
 	
-	var wdata = widget_data[SERIES_IDX]
+	var wdata = widget_data[series_key]
 	var massaged_data = massage_data(wdata)
 	
 	// get the min and max setpoints (stop or slow)
 	var max_sp_stop = null;
 	var max_sp_slow = null;
-	if(widget_data[SP_STOP_HIGH_IDX].length){
-		max_sp_stop = _.max(widget_data[SP_STOP_HIGH_IDX], function(d){return d[VAL_IDX]})[VAL_IDX]
+	if(widget_data[stop_high_key].length){
+		max_sp_stop = _.max(widget_data[stop_high_key], function(d){return d[VAL_IDX]})[VAL_IDX]
 	}
-	if(widget_data[SP_SLOW_HIGH_IDX].length){		
-		max_sp_slow = _.max(widget_data[SP_SLOW_HIGH_IDX], function(d){return d[VAL_IDX]})[VAL_IDX]
+	if(widget_data[slow_high_key].length){		
+		max_sp_slow = _.max(widget_data[slow_high_key], function(d){return d[VAL_IDX]})[VAL_IDX]
 	}
 	var min_sp_stop = null
 	var min_sp_slow = null
-	if(widget_data[SP_STOP_LOW_IDX].length){
-		min_sp_stop = _.min(widget_data[SP_STOP_LOW_IDX], function(d){return d[VAL_IDX]})[VAL_IDX]
+	if(widget_data[stop_low_key].length){
+		min_sp_stop = _.min(widget_data[stop_low_key], function(d){return d[VAL_IDX]})[VAL_IDX]
 	}
-	if(widget_data[SP_SLOW_LOW_IDX].length){
-		min_sp_slow = _.min(widget_data[SP_SLOW_LOW_IDX], function(d){return d[VAL_IDX]})[VAL_IDX]
+	if(widget_data[slow_low_key].length){
+		min_sp_slow = _.min(widget_data[slow_low_key], function(d){return d[VAL_IDX]})[VAL_IDX]
 	}
 	
-	var vals_x = _.map(widget_data[SERIES_IDX], function(s){return s[TIME_IDX]});
-	var vals_y = _.map(widget_data[SERIES_IDX], function(s){return s[VAL_IDX]});
+	var vals_x = _.map(widget_data[series_key], function(s){return s[TIME_IDX]});
+	var vals_y = _.map(widget_data[series_key], function(s){return s[VAL_IDX]});
 	var reg_slope = ls_regression_slope(vals_x, vals_y);
 	
 	var triangle_location = trend_direction(reg_slope)
@@ -141,7 +155,7 @@ function render_widget_trend(div_id, widget_conf, widget_data){
 	
 	var graph_line = vis.add(pv.Line)
 		.data(function(){
-//			return widget_data[SERIES_IDX]
+//			return widget_data[series_key]
 			return massaged_data
 		})
 		.interpolate('step-after')
@@ -177,16 +191,15 @@ function massage_data(wdata){
 		var avg_data = avg(wdata.slice(i, i+step))
 		reduced_data.push([wdata[i][TIME_IDX], avg_data])
 	}
-	console.log(reduced_data)
 	return reduced_data
 }
 
 function init_scales(sq_left, tri_loc, half_height, widget_data){
-	x_scale = pv.Scale.linear(widget_data[SERIES_IDX], function(d){return d[TIME_IDX]}).range(sq_left, sq_left+half_height)
+	x_scale = pv.Scale.linear(widget_data[series_key], function(d){return d[TIME_IDX]}).range(sq_left, sq_left+half_height)
 	
 	var sq_top = get_square_top(tri_loc, half_height)
 			
-	y_scale = pv.Scale.linear(widget_data[SERIES_IDX], function(d){return d[VAL_IDX]}).range(sq_top+half_height, sq_top)
+	y_scale = pv.Scale.linear(widget_data[series_key], function(d){return d[VAL_IDX]}).range(sq_top+half_height, sq_top)
 }
 
 function get_square_top(tri_loc, half_height){

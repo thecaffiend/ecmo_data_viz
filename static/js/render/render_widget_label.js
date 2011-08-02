@@ -38,7 +38,9 @@ function render_widget_label(div_id, widget_conf, widget_data){
 	
 	vis.add(pv.Label)
 		.text(function(){
-			return ""+widget_data[SERIES_IDX][widget_data[SERIES_IDX].length-1][VAL_IDX]
+//			return ""+widget_data[SERIES_IDX][widget_data[SERIES_IDX].length-1][VAL_IDX]
+			var wd_key = widget_conf.div_id + SERIES_SFX;
+			return ""+widget_data[wd_key][widget_data[wd_key].length-1][VAL_IDX]
 		})
 		.top(h)
 		.left(w/2)
