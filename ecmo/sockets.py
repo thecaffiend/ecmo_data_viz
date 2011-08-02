@@ -45,7 +45,7 @@ def screen_socket(request, screen_name, run_id):
             screen_struct = deepcopy(ss_base)
             for p in points['points']:
                 p_map = p_ss_map[p['feed']]
-                screen_struct[p_map[0]][p_map[1]] = [run_time, p['val']] 
+                screen_struct[p_map[0]][p_map[1]].append([run_time, p['val']]) 
             jstruct = jsjson(screen_struct)
             ws.send(jstruct)
             last_sent = run_time
