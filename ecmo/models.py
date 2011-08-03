@@ -62,17 +62,17 @@ class Feed(models.Model):
         return '%s: %s' % (self.run, self.feed_type)
     
     def next_event(self, run_time):
+        result = [None, None]
         try:
-            events = self.feedevent_set.filter(run_time__lte=run_time).order_by('-run_time')
-            if events[0].trend:
-                return (events[0], events[1])
-            else:
-                return (events[0], None)
-            
+            result[0] = self.feedevent_set.filter(run_time__lte=run_time).order_by('-run_time')[0]
+            if result[0].trend:
+                try:
+                    result[1] = self.feedevent_set.filter(run_time__gt=result[0].run_time).order_by('run_time')[0]
+                except:
+                    pass
         except:
-            if events:
-                return (events[0], None)
-            return None
+            pass
+        return tuple(result)
             
 
 DIST_SET = 'SET'
@@ -107,6 +107,9 @@ class FeedEvent(models.Model):
     
     class Meta:
         unique_together = ('feed', 'run_time')
+    
+    def __unicode__(self):
+        return u'%s: %s' % (self.feed, self.run_time)
 
     @property
     def msg(self):
@@ -125,7 +128,7 @@ class FeedEvent(models.Model):
             'arg': self.arg
         }
         
-        if False: #self.trend:
+        if self.trend and trend_event:
             interp = {
                 TND_LNR: lambda ax, ay, bx, by: np.interp(run_time, [ax,bx], [ay, by])
             }
@@ -158,13 +161,13 @@ class FeedPoint(models.Model):
         return {'val': self.value, 'feed': self.feed.feed_type.js_name}
     
     @staticmethod
-    def generate(feed, run_time, event, save=False):
+    def generate(feed, run_time, next_event, trend_event):
         args = {
             "run_time": run_time,
             "feed": feed
         }
-        if event:
-            args['value'] = event[0].generate_value(run_time, event)
+        if next_event:
+            args['value'] = next_event.generate_value(run_time, trend_event)
         else:
             args['value'] = 0
         point = FeedPoint(**args)

@@ -61,13 +61,19 @@ def screen_data(request, screen_name, run_id, min_back):
             try:
                 last_point = points[-1].run_time
             except:
-                last_point = -1
+                last_point = 0
             # not enough... need to generate more
             if last_point < min_back:
-                points.extend(map(
-                    lambda rt: FeedPoint.generate(feed, rt, feed.next_event(rt), save=True),
-                    range(last_point + 1, min_back)
-                ))
+                for rt in range(last_point, min_back):
+                    next_event, trend_event = feed.next_event(rt)
+                    point = FeedPoint.generate(feed, rt, next_event, trend_event)
+                    try:
+                        point.full_clean()
+                        point.save()
+                        points.append(point)
+                    except:
+                        pass
+                    
             screen_struct[p_map[0]][p_map[1]] = [[p.run_time, p.value] for p in points]
         except KeyError:
             # expected: not all data from a run will neccessarily be used in a screen
