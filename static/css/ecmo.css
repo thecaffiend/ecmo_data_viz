@@ -48,7 +48,7 @@
 	width:1280px;
 	height:300px;
 	float:none;
-	/*background-color: #FF0000;*/
+	background-color: #FF0000;
 	overflow:hidden;
 }
 
@@ -56,13 +56,13 @@
 	width:320px;
 	height:424px;
 	float:left;
-	/*background-color: #00FF00;*/
+	background-color: #00FF00;
 }
 
 .widget_col_right{
 	width:320px;
 	height:424px;
-	/*background-color: #00FF00;*/
+	background-color: #00FF00;
 	float:left;
 	overflow:hidden;
 }
@@ -71,7 +71,7 @@
 	width:640px;
 	height:424px;
 	float:left;
-	/*background-color: #0000FF;*/
+	background-color: #0000FF;
 }
 
 .systime{

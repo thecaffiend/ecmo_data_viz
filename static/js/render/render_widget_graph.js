@@ -48,11 +48,13 @@ function render_widget_graph(div_id, widget_conf, widget_data){
 	var tick_step = (w-(w/5)) / 6;
 	
 	var last_item_string = function(key){
-		return widget_data[key].length ? widget_data[key].slice(-1)[VAL_IDX] : ""
+		// the slice(-1) will come back with an array with 2 array elements, hence the [0]
+		// index before the VAL_IDX index
+		return widget_data[key].length ? widget_data[key].slice(-1)[0][VAL_IDX] : ""
 	}
 	
 	var last_item_val = function(key){
-		return widget_data[key].length ? widget_data[key].slice(-1)[VAL_IDX] : 0
+		return widget_data[key].length ? widget_data[key].slice(-1)[0][VAL_IDX] : 0
 	}
 	
 	// get the min and max values of the set points for the y_scale
@@ -356,12 +358,15 @@ function update_widget_graph(id, conf, widget_data, graph_ctxt){
 	var tick_step = (w-(w/5)) / 6;
 	
 	var last_item_string = function(key){
-		return widget_data[key].length ? widget_data[key].slice(-1)[VAL_IDX] : ""
+		// the slice(-1) will come back with an array with 2 array elements, hence the [0]
+		// index before the VAL_IDX index
+		return widget_data[key].length ? widget_data[key].slice(-1)[0][VAL_IDX] : ""
 	}
 	
 	var last_item_val = function(key){
-		return widget_data[key].length ? widget_data[key].slice(-1)[VAL_IDX] : 0
+		return widget_data[key].length ? widget_data[key].slice(-1)[0][VAL_IDX] : 0
 	}
+	
 	
 	// get the min and max values of the set points for the y_scale
 	// start with the stopping set points, if they don't exists, try the 
