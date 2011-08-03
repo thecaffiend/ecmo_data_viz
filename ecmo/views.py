@@ -10,6 +10,9 @@ from django.utils import simplejson
 
 import math
 
+def home(request):
+    return render_to_response('home.html', {})
+
 def ecmo_main(request):
     return render_to_response('ecmo_main.html', {})
 
