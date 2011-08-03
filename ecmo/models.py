@@ -141,7 +141,7 @@ class FeedEvent(models.Model):
                 )
         
         dists = {
-            DIST_SET: lambda value, a: v,
+            DIST_SET: lambda value, a: value,
             DIST_NRM: lambda mu, sigma: random.normal(mu, sigma),
             DIST_UNI: lambda min_v, max_v: random.uniform(min_v, max_v) 
         }
