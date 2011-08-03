@@ -5,7 +5,10 @@
 {% block extrastyle %}
 {% endblock %}
 {% block extrahead %}
-   	<script type="text/javascript" src="/static/js/render/render_widget_label.js"></script>
+   	<script type="text/javascript" src="/static/js/lib/json/json2.js"></script>
+	<script type="text/javascript" src="/static/js/lib/jquery.websocket-0.0.1.js"></script>
+	<script type="text/javascript" src="/static/js/sock_util.js"></script>
+	<script type="text/javascript" src="/static/js/render/render_widget_label.js"></script>
    	<script type="text/javascript" src="/static/js/render/render_widget_graph.js"></script>
    	<script type="text/javascript" src="/static/js/render/render_widget_trend.js"></script>
 {% endblock %}
@@ -146,6 +149,8 @@ const ORDER_SFX = "_order";
 const TIME_IDX = 0;
 const VAL_IDX = 1;
 
+var sock;
+
 var test_series = {
 	"premem_pressure": {
 		"premem_pressure_slow_high": _.map(_.range(3600), function(i){return [i, 220]}),
@@ -193,51 +198,104 @@ var test_series = {
 	},
 }
 
-	
-var data_url = "/ecmo/widget_confs/json";
-var configs = null;
+// this value is needed per page (screen) that will request data from the server
+const SCREEN_NAME = "dashboard"	
+// this value is also needed per screen. this should be selectable by the user at some point.
+const RUN_ID = "1"	
+// this is the minimum ammount of time to pull data for at startup in seconds. if more exists, 
+// more will be returned. if less exists, this is the ammount that will be generated up to
+const BACKFILL_MIN = 100;
 
-function create_widget_div(conf){
+const CONF_KEY = "conf";
+const FEED_DATA_KEY = "feed_data";
+
+var configs_url = "/ecmo/widget_confs/json";
+//var configs_url = "/ecmo/widget_confs/" + SCREEN_NAME + "/" + RUN_ID + "/json";
+var backfill_url = "/ecmo/screen/" + SCREEN_NAME + "/" + RUN_ID + "/data/" + BACKFILL_MIN;
+
+var configs = null;
+var backfill = null;
+
+function init_sockets(){
+    sock = new WebSocket("ws://"+location.host+"/ecmo/screen/" + SCREEN_NAME + "/" + RUN_ID + "/socket");
+    sock.onmessage = function(e){data_update_handler(JSON.parse(e.data))};
+    sock.onopen = function(e){console.log(e)};
+    
+}
+
+function create_widget_div(conf, init_data){
+	var w_id = generate_div_id(conf)
 	var widget = $('<div/>',{
-        id: conf.div_id + "-" + conf.container + "-" + conf.pos,
+        id: w_id,
         'class': 'widget'
     })
     
     // loop over (title, trend, main)
     $.each(['label', 'trend', 'graph'], function(idx, div_type){
         $(widget).append($('<div/>',{
-        	// be sure to get the id of the widget as the base for this div's id
-            id: $(widget).attr('id') + '-' + div_type,
+        	id: w_id + '-' + div_type,
             'class': div_type
         }))
-        // generate the protovis pieces for (title, trend, main)
-//        $.data(widget, 'pvs')[div] = widget_thing(div_type, wc.div_id + '_' + div_type)
     })	
     
     var container = $('#'+conf.container)
     container.append(widget)
     
-     $.data(widget, 'conf', conf)
-     $.data(widget, 'series', test_series[conf.div_id])
+     widget.data(CONF_KEY, conf)
+     widget.data(FEED_DATA_KEY, init_data)
+     return w_id
 }
 
-function render_widget(widget_conf, widget_data){
-	var widget_div_id = widget_conf.div_id + "-" + widget_conf.container + "-" + widget_conf.pos
-	render_widget_graph(widget_div_id+"-graph", widget_conf, widget_data);
-	render_widget_trend(widget_div_id+"-trend", widget_conf, widget_data);
-	render_widget_label(widget_div_id+"-label", widget_conf, widget_data)
+function render_widget(id){
+	var widget = $("#"+id)
+	var cdata = widget.data(CONF_KEY)
+	var fdata = widget.data(FEED_DATA_KEY)
+	
+	render_widget_graph(id+"-graph", cdata, fdata);
+	render_widget_trend(id+"-trend", cdata, fdata);
+	render_widget_label(id+"-label", cdata, fdata)
+}
+
+function data_update_handler(new_data){
+	console.log(new_data)
+	_.each(new_data, function(data_dict, base_div_id){
+		// get all divs starting with the base of class widget
+		var divs = $('div[id^="premem_pressure"]:[class~="widget"]')
+		_.each(divs, function(d, idx){
+			_.each(data_dict, function(feed_data, feed_key){
+				if($(d).data(FEED_DATA_KEY).hasOwnProperty(feed_key)){
+					console.log('feed len before', $(d).data(FEED_DATA_KEY)[feed_key].length)
+					console.log(new_data[base_div_id][feed_key])
+					var new_arr = $(d).data(FEED_DATA_KEY)[feed_key].concat(new_data[base_div_id][feed_key])
+					console.log("new_arr len", new_arr.length)
+					// data not getting re-written right. new_arr is correct
+					$(d).data(FEED_DATA_KEY[feed_key], new_arr)
+					console.log('feed_after', $(d).data(FEED_DATA_KEY)[feed_key].length)
+				}
+			})
+						
+		})
+	})
+}
+
+function generate_div_id(widget_conf){
+	return widget_conf.div_id + "-" + widget_conf.container + "-" + widget_conf.pos
 }
      		
 $(document).ready(function() {
-	$.get(data_url, function(fetched_configs){
-        configs = fetched_configs
-        $.each(configs, function(idx, conf){
-        	create_widget_div(conf)
-			render_widget(conf, test_series[conf.div_id])
+	$.get(configs_url, function(fetched_configs){
+		$.get(backfill_url, function(backfill_data){
+			configs = fetched_configs;
+	        backfill = backfill_data;
+	        
+	        $.each(configs, function(idx, conf){
+	        	var w_id = create_widget_div(conf, backfill[conf.div_id])
+				render_widget(w_id)
+			})
+			
+			!sock ? init_sockets() : 0
 		})
     })
-    
-	
 });
 
 </script>
@@ -245,7 +303,7 @@ $(document).ready(function() {
 	These are the screen regin divs for the dashboard view (hence db_ prefix). 
 	We have a (T)op, (B)ottom, (L)eft, (R)ight and (C)enter region.
 -->
-<div class="outer">
+<div id="dashboard" class="outer">
 <div id="db_T" class="widget_row"></div>
 <div id="db_L" class="widget_col_left"></div>
 <div id="db_C" class="viz_center"></div>
