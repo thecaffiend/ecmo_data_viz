@@ -6,8 +6,8 @@ var y_scale = null;
 // or decreasing. Less than this number will be cosidered a flat trend
 var slope_tolerance = .5;
 
-// number of seconds of data to show in this view. default of 5 minutes (300 seconds)
-const SECONDS_TO_SHOW = 300;
+// number of seconds of data to show in this view. 
+const SECONDS_TO_SHOW = 60;
 
 // number of datapoints to render in the view. the SECONDS_TO_SHOW number of 
 // seconds will be merged into NUM_DATAPOINTS_SHOWN number of points
@@ -54,29 +54,29 @@ function render_widget_trend(div_id, widget_conf, widget_data){
 	// centers the square
 	var square_left = (w - half_height) / 2	
 	
-	var wdata = widget_data[series_key]
+	var wdata = widget_data[series_key].slice(-SECONDS_TO_SHOW)
 	var massaged_data = massage_data(wdata)
 	
 	// get the min and max setpoints (stop or slow)
 	var max_sp_stop = null;
 	var max_sp_slow = null;
 	if(stop_high_exists && widget_data[stop_high_key].length){
-		max_sp_stop = _.max(widget_data[stop_high_key], function(d){return d[VAL_IDX]})[VAL_IDX]
+		max_sp_stop = _.max(widget_data[stop_high_key].slice(-SECONDS_TO_SHOW), function(d){return d[VAL_IDX]})[VAL_IDX]
 	}
 	if(slow_high_exists && widget_data[slow_high_key].length){		
-		max_sp_slow = _.max(widget_data[slow_high_key], function(d){return d[VAL_IDX]})[VAL_IDX]
+		max_sp_slow = _.max(widget_data[slow_high_key].slice(-SECONDS_TO_SHOW), function(d){return d[VAL_IDX]})[VAL_IDX]
 	}
 	var min_sp_stop = null
 	var min_sp_slow = null
 	if(stop_low_exists && widget_data[stop_low_key].length){
-		min_sp_stop = _.min(widget_data[stop_low_key], function(d){return d[VAL_IDX]})[VAL_IDX]
+		min_sp_stop = _.min(widget_data[stop_low_key].slice(-SECONDS_TO_SHOW), function(d){return d[VAL_IDX]})[VAL_IDX]
 	}
 	if(slow_low_exists && widget_data[slow_low_key].length){
-		min_sp_slow = _.min(widget_data[slow_low_key], function(d){return d[VAL_IDX]})[VAL_IDX]
+		min_sp_slow = _.min(widget_data[slow_low_key].slice(-SECONDS_TO_SHOW), function(d){return d[VAL_IDX]})[VAL_IDX]
 	}
 	
-	var vals_x = _.map(widget_data[series_key], function(s){return s[TIME_IDX]});
-	var vals_y = _.map(widget_data[series_key], function(s){return s[VAL_IDX]});
+	var vals_x = _.map(widget_data[series_key].slice(-SECONDS_TO_SHOW), function(s){return s[TIME_IDX]});
+	var vals_y = _.map(widget_data[series_key].slice(-SECONDS_TO_SHOW), function(s){return s[VAL_IDX]});
 	var reg_slope = ls_regression_slope(vals_x, vals_y);
 	
 	var triangle_location = trend_direction(reg_slope)
@@ -223,29 +223,29 @@ function update_widget_trend(div_id, widget_conf, widget_data, trend_ctxt){
 	// centers the square
 	var square_left = (w - half_height) / 2	
 	
-	var wdata = widget_data[series_key]
+	var wdata = widget_data[series_key].slice(-SECONDS_TO_SHOW)
 	var massaged_data = massage_data(wdata)
 	
 	// get the min and max setpoints (stop or slow)
 	var max_sp_stop = null;
 	var max_sp_slow = null;
 	if(stop_high_exists && widget_data[stop_high_key].length){
-		max_sp_stop = _.max(widget_data[stop_high_key], function(d){return d[VAL_IDX]})[VAL_IDX]
+		max_sp_stop = _.max(widget_data[stop_high_key].slice(-SECONDS_TO_SHOW), function(d){return d[VAL_IDX]})[VAL_IDX]
 	}
 	if(slow_high_exists && widget_data[slow_high_key].length){		
-		max_sp_slow = _.max(widget_data[slow_high_key], function(d){return d[VAL_IDX]})[VAL_IDX]
+		max_sp_slow = _.max(widget_data[slow_high_key].slice(-SECONDS_TO_SHOW), function(d){return d[VAL_IDX]})[VAL_IDX]
 	}
 	var min_sp_stop = null
 	var min_sp_slow = null
 	if(stop_low_exists && widget_data[stop_low_key].length){
-		min_sp_stop = _.min(widget_data[stop_low_key], function(d){return d[VAL_IDX]})[VAL_IDX]
+		min_sp_stop = _.min(widget_data[stop_low_key].slice(-SECONDS_TO_SHOW), function(d){return d[VAL_IDX]})[VAL_IDX]
 	}
 	if(slow_low_exists && widget_data[slow_low_key].length){
-		min_sp_slow = _.min(widget_data[slow_low_key], function(d){return d[VAL_IDX]})[VAL_IDX]
+		min_sp_slow = _.min(widget_data[slow_low_key].slice(-SECONDS_TO_SHOW), function(d){return d[VAL_IDX]})[VAL_IDX]
 	}
 	
-	var vals_x = _.map(widget_data[series_key], function(s){return s[TIME_IDX]});
-	var vals_y = _.map(widget_data[series_key], function(s){return s[VAL_IDX]});
+	var vals_x = _.map(widget_data[series_key].slice(-SECONDS_TO_SHOW), function(s){return s[TIME_IDX]});
+	var vals_y = _.map(widget_data[series_key].slice(-SECONDS_TO_SHOW), function(s){return s[VAL_IDX]});
 	var reg_slope = ls_regression_slope(vals_x, vals_y);
 	
 	var triangle_location = trend_direction(reg_slope)
@@ -333,10 +333,11 @@ function update_widget_trend(div_id, widget_conf, widget_data, trend_ctxt){
 	trend_ctxt.vis.render()
 }
 
-// this view is interested in showing the last 5 minutes
+// this view is interested in showing the last SECONDS_TO_SHOW seconds. Massage the
+// data into NUM_DATAPOINTS_SHOWN by averaging the intermediate values
 function massage_data(wdata){
-	// try to grab the last frame of seconds we're interested in showing
-	var seconds_slice = wdata.slice(-SECONDS_TO_SHOW)
+	// wdata is pre-sliced
+	var seconds_slice = wdata
 	
 	// function for calculating the average of our datapoint slices
 	var avg = function(arr){return (_.reduce(arr, function(memo, dp){ return memo + dp[VAL_IDX]; }, 0))/arr.length}
@@ -357,11 +358,11 @@ function massage_data(wdata){
 }
 
 function init_scales(sq_left, tri_loc, half_height, widget_data){
-	x_scale = pv.Scale.linear(widget_data[series_key], function(d){return d[TIME_IDX]}).range(sq_left, sq_left+half_height)
+	x_scale = pv.Scale.linear(widget_data[series_key].slice(-SECONDS_TO_SHOW), function(d){return d[TIME_IDX]}).range(sq_left, sq_left+half_height)
 	
 	var sq_top = get_square_top(tri_loc, half_height)
 			
-	y_scale = pv.Scale.linear(widget_data[series_key], function(d){return d[VAL_IDX]}).range(sq_top+half_height, sq_top)
+	y_scale = pv.Scale.linear(widget_data[series_key].slice(-SECONDS_TO_SHOW), function(d){return d[VAL_IDX]}).range(sq_top+half_height, sq_top)
 }
 
 function get_square_top(tri_loc, half_height){
