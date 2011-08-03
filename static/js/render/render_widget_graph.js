@@ -15,6 +15,8 @@ var stop_low_exists = null;
 var series_exists = null;
 var order_exists = null;
 
+const MAX_DATAPOINTS_TO_SHOW = 900
+
 function render_widget_graph(div_id, widget_conf, widget_data){
 	var h = $("#"+div_id).height()
 	var w = $("#"+div_id).width()
@@ -37,10 +39,10 @@ function render_widget_graph(div_id, widget_conf, widget_data){
 
 	// take up 4/5 of the width with the setpoint and measurement lines
 	// make 0 if the key is not there.
-	var sp_slow_step =  slow_high_exists ? (w-(w/5)) / widget_data[slow_high_key].length : 0;	
-	var sp_stop_step =  stop_high_exists ? (w-(w/5)) / widget_data[stop_high_key].length : 0;	
-	var order_step =  order_exists ? (w-(w/5)) / widget_data[order_key].length : 0;	
-	var series_step =  series_exists ? (w-(w/5)) / widget_data[series_key].length : 0;	
+	var sp_slow_step =  slow_high_exists ? (w-(w/5)) / widget_data[slow_high_key].slice(-MAX_DATAPOINTS_TO_SHOW).length : 0;	
+	var sp_stop_step =  stop_high_exists ? (w-(w/5)) / widget_data[stop_high_key].slice(-MAX_DATAPOINTS_TO_SHOW).length : 0;	
+	var order_step =  order_exists ? (w-(w/5)) / widget_data[order_key].slice(-MAX_DATAPOINTS_TO_SHOW).length : 0;	
+	var series_step =  series_exists ? (w-(w/5)) / widget_data[series_key].slice(-MAX_DATAPOINTS_TO_SHOW).length : 0;	
 	
 	// steps for adding tick marks, want one per 10 minutes
 	var tick_step = (w-(w/5)) / 6;
@@ -127,7 +129,7 @@ function render_widget_graph(div_id, widget_conf, widget_data){
 	// upper stop setpoint line
 	var setpoint_stop_top_line = vis.add(pv.Line)
 		.data(function(){
-			return stop_high_exists ? widget_data[stop_high_key] : []
+			return stop_high_exists ? widget_data[stop_high_key].slice(-MAX_DATAPOINTS_TO_SHOW) : []
 		})
 		.top(function(d){
 			return stop_high_exists ? y_scale(d[VAL_IDX]) : 0
@@ -161,7 +163,7 @@ function render_widget_graph(div_id, widget_conf, widget_data){
 	// upper slow setpoint line
 	var setpoint_slow_top_line = vis.add(pv.Line)
 		.data(function(){
-			return slow_high_exists ? widget_data[slow_high_key] : []
+			return slow_high_exists ? widget_data[slow_high_key].slice(-MAX_DATAPOINTS_TO_SHOW) : []
 		})
 		.top(function(d){
 			return slow_high_exists ? y_scale(d[VAL_IDX]) : 0
@@ -196,7 +198,7 @@ function render_widget_graph(div_id, widget_conf, widget_data){
 	// lower stop setpoint line
 	var setpoint_stop_low_line = vis.add(pv.Line)
 		.data(function(){
-			return stop_low_exists ? widget_data[stop_low_key] : []
+			return stop_low_exists ? widget_data[stop_low_key].slice(-MAX_DATAPOINTS_TO_SHOW) : []
 		})
 		.top(function(d){
 			return stop_low_exists ?  y_scale(d[VAL_IDX]) : 0
@@ -230,7 +232,7 @@ function render_widget_graph(div_id, widget_conf, widget_data){
 	// lower slow setpoint line
 	var setpoint_slow_low_line = vis.add(pv.Line)
 		.data(function(){
-			return slow_low_exists ? widget_data[slow_low_key] : []
+			return slow_low_exists ? widget_data[slow_low_key].slice(-MAX_DATAPOINTS_TO_SHOW) : []
 		})
 		.top(function(d){
 			return slow_low_exists ? y_scale(d[VAL_IDX]) : 0
@@ -263,7 +265,7 @@ function render_widget_graph(div_id, widget_conf, widget_data){
 		
 	var series_line = vis.add(pv.Line)
 		.data(function(){
-			return series_exists ? widget_data[series_key] : []
+			return series_exists ? widget_data[series_key].slice(-MAX_DATAPOINTS_TO_SHOW) : []
 		})
 		.top(function(d){
 			return y_scale(d[VAL_IDX])
@@ -283,7 +285,7 @@ function render_widget_graph(div_id, widget_conf, widget_data){
 		
 	var order_line = vis.add(pv.Line)
 		.data(function(){
-			return order_exists ? widget_data[order_key] : []
+			return order_exists ? widget_data[order_key].slice(-MAX_DATAPOINTS_TO_SHOW) : []
 		})
 		.top(function(d){
 			return y_scale(d[VAL_IDX])
@@ -345,10 +347,10 @@ function update_widget_graph(id, conf, widget_data, graph_ctxt){
 
 	// take up 4/5 of the width with the setpoint and measurement lines
 	// make 0 if the key is not there.
-	var sp_slow_step =  slow_high_exists ? (w-(w/5)) / widget_data[slow_high_key].length : 0;	
-	var sp_stop_step =  stop_high_exists ? (w-(w/5)) / widget_data[stop_high_key].length : 0;	
-	var order_step =  order_exists ? (w-(w/5)) / widget_data[order_key].length : 0;	
-	var series_step =  series_exists ? (w-(w/5)) / widget_data[series_key].length : 0;	
+	var sp_slow_step =  slow_high_exists ? (w-(w/5)) / widget_data[slow_high_key].slice(-MAX_DATAPOINTS_TO_SHOW).length : 0;	
+	var sp_stop_step =  stop_high_exists ? (w-(w/5)) / widget_data[stop_high_key].slice(-MAX_DATAPOINTS_TO_SHOW).length : 0;	
+	var order_step =  order_exists ? (w-(w/5)) / widget_data[order_key].slice(-MAX_DATAPOINTS_TO_SHOW).length : 0;	
+	var series_step =  series_exists ? (w-(w/5)) / widget_data[series_key].slice(-MAX_DATAPOINTS_TO_SHOW).length : 0;	
 	
 	// steps for adding tick marks, want one per 10 minutes
 	var tick_step = (w-(w/5)) / 6;
@@ -390,8 +392,12 @@ function update_widget_graph(id, conf, widget_data, graph_ctxt){
 	var y_scale = pv.Scale.linear(max_sp, min_sp).range(15, h-15)
 // [REFACTOR END] lots of code copied from above. refactor into single function
 	
+	
+	// clean the following up. use chanining so items like "graph_ctxt.stop_high_line" aren't
+	// declared for every property setting
+	
 	// update the stop high setpoint line
-	graph_ctxt.stop_high_line.data(function(){return stop_high_exists ? widget_data[stop_high_key] : []})
+	graph_ctxt.stop_high_line.data(function(){return stop_high_exists ? widget_data[stop_high_key].slice(-MAX_DATAPOINTS_TO_SHOW) : []})
 	graph_ctxt.stop_high_line.visible(stop_high_exists)
 	graph_ctxt.stop_high_line.top(function(d){
 		return stop_high_exists ? y_scale(d[VAL_IDX]) : 0
@@ -413,7 +419,7 @@ function update_widget_graph(id, conf, widget_data, graph_ctxt){
 	})
 	
 	// update the stop low setpoint line
-	graph_ctxt.stop_low_line.data(function(){return stop_low_exists ? widget_data[stop_low_key] : []})
+	graph_ctxt.stop_low_line.data(function(){return stop_low_exists ? widget_data[stop_low_key].slice(-MAX_DATAPOINTS_TO_SHOW) : []})
 	graph_ctxt.stop_low_line.visible(stop_low_exists)
 	graph_ctxt.stop_low_line.top(function(d){
 		return stop_low_exists ? y_scale(d[VAL_IDX]) : 0
@@ -435,7 +441,7 @@ function update_widget_graph(id, conf, widget_data, graph_ctxt){
 	})
 	
 	// update the slow high setpoint line
-	graph_ctxt.slow_high_line.data(function(){return slow_high_exists ? widget_data[slow_high_key] : []})
+	graph_ctxt.slow_high_line.data(function(){return slow_high_exists ? widget_data[slow_high_key].slice(-MAX_DATAPOINTS_TO_SHOW) : []})
 	graph_ctxt.slow_high_line.visible(slow_high_exists)
 	graph_ctxt.slow_high_line.top(function(d){
 		return slow_high_exists ? y_scale(d[VAL_IDX]) : 0
@@ -457,7 +463,7 @@ function update_widget_graph(id, conf, widget_data, graph_ctxt){
 	})
 	
 	// update the slow low setpoint line
-	graph_ctxt.slow_low_line.data(function(){return slow_low_exists ? widget_data[slow_low_key] : []})
+	graph_ctxt.slow_low_line.data(function(){return slow_low_exists ? widget_data[slow_low_key].slice(-MAX_DATAPOINTS_TO_SHOW) : []})
 	graph_ctxt.slow_low_line.visible(slow_low_exists)
 	graph_ctxt.slow_low_line.top(function(d){
 		return slow_low_exists ? y_scale(d[VAL_IDX]) : 0
@@ -479,7 +485,7 @@ function update_widget_graph(id, conf, widget_data, graph_ctxt){
 	})
 	
 	// get the series line to use the newly calculated values
-	graph_ctxt.series_line.data(widget_data[series_key])
+	graph_ctxt.series_line.data(widget_data[series_key].slice(-MAX_DATAPOINTS_TO_SHOW))
 	graph_ctxt.series_line.visible(series_exists)
 	graph_ctxt.series_line.strokeStyle("blue")
 	graph_ctxt.series_line.top(function(d){
@@ -490,7 +496,9 @@ function update_widget_graph(id, conf, widget_data, graph_ctxt){
 	})
 	
 	// order needs the new vals too		
-	graph_ctxt.order_line.data(widget_data[order_key])
+	graph_ctxt.order_line.data(function(){ 
+		return order_exists ? widget_data[order_key].slice(-MAX_DATAPOINTS_TO_SHOW) : [] 
+	})
 	graph_ctxt.order_line.visible(order_exists)
 	graph_ctxt.order_line.top(function(d){
 		return y_scale(d[VAL_IDX])
