@@ -20,6 +20,14 @@ var stop_low_key = null;
 var series_key = null;
 var order_key = null;
 
+var slow_high_exists = null;
+var slow_low_exists = null;
+var stop_high_exists = null;
+var stop_low_exists = null;
+var series_exists = null;
+var order_exists = null;
+
+
 function render_widget_trend(div_id, widget_conf, widget_data){
 	var h = $("#"+div_id).height()
 	var w = $("#"+div_id).width()
@@ -30,6 +38,15 @@ function render_widget_trend(div_id, widget_conf, widget_data){
 	stop_low_key = widget_conf.div_id + STOP_LOW_SFX;
 	series_key = widget_conf.div_id + SERIES_SFX;
 	order_key = widget_conf.div_id + ORDER_SFX;
+	
+	// figure out if the keys are there
+	slow_high_exists = widget_data.hasOwnProperty(slow_high_key);
+	slow_low_exists = widget_data.hasOwnProperty(slow_low_key);
+	stop_high_exists = widget_data.hasOwnProperty(stop_high_key);
+	stop_low_exists = widget_data.hasOwnProperty(stop_low_key);
+	series_exists = widget_data.hasOwnProperty(series_key);
+	order_exists = widget_data.hasOwnProperty(order_key);
+
 	
 	// square will always be half the available height. if there is a 
 	// triangle, it will take up the remaining half
@@ -43,18 +60,18 @@ function render_widget_trend(div_id, widget_conf, widget_data){
 	// get the min and max setpoints (stop or slow)
 	var max_sp_stop = null;
 	var max_sp_slow = null;
-	if(widget_data[stop_high_key].length){
+	if(stop_high_exists && widget_data[stop_high_key].length){
 		max_sp_stop = _.max(widget_data[stop_high_key], function(d){return d[VAL_IDX]})[VAL_IDX]
 	}
-	if(widget_data[slow_high_key].length){		
+	if(slow_high_exists && widget_data[slow_high_key].length){		
 		max_sp_slow = _.max(widget_data[slow_high_key], function(d){return d[VAL_IDX]})[VAL_IDX]
 	}
 	var min_sp_stop = null
 	var min_sp_slow = null
-	if(widget_data[stop_low_key].length){
+	if(stop_low_exists && widget_data[stop_low_key].length){
 		min_sp_stop = _.min(widget_data[stop_low_key], function(d){return d[VAL_IDX]})[VAL_IDX]
 	}
-	if(widget_data[slow_low_key].length){
+	if(slow_low_exists && widget_data[slow_low_key].length){
 		min_sp_slow = _.min(widget_data[slow_low_key], function(d){return d[VAL_IDX]})[VAL_IDX]
 	}
 	
