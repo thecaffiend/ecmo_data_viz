@@ -186,6 +186,151 @@ function render_widget_trend(div_id, widget_conf, widget_data){
 		.strokeStyle('white')
 		
 	vis.render()
+	
+	var trend_ctxt = {
+		"vis": vis,
+		"triangle": triangle,
+		"square": square,
+		"graph_line": graph_line,
+	}
+	
+	return trend_ctxt
+}
+
+function update_widget_trend(div_id, widget_conf, widget_data, trend_ctxt){
+	var h = $("#"+div_id).height()
+	var w = $("#"+div_id).width()
+	
+	slow_high_key = widget_conf.div_id + SLOW_HIGH_SFX;
+	slow_low_key = widget_conf.div_id + SLOW_LOW_SFX;
+	stop_high_key = widget_conf.div_id + STOP_HIGH_SFX;
+	stop_low_key = widget_conf.div_id + STOP_LOW_SFX;
+	series_key = widget_conf.div_id + SERIES_SFX;
+	order_key = widget_conf.div_id + ORDER_SFX;
+	
+	// figure out if the keys are there
+	slow_high_exists = widget_data.hasOwnProperty(slow_high_key);
+	slow_low_exists = widget_data.hasOwnProperty(slow_low_key);
+	stop_high_exists = widget_data.hasOwnProperty(stop_high_key);
+	stop_low_exists = widget_data.hasOwnProperty(stop_low_key);
+	series_exists = widget_data.hasOwnProperty(series_key);
+	order_exists = widget_data.hasOwnProperty(order_key);
+
+	
+	// square will always be half the available height. if there is a 
+	// triangle, it will take up the remaining half
+	var half_height = h/2
+	// centers the square
+	var square_left = (w - half_height) / 2	
+	
+	var wdata = widget_data[series_key]
+	var massaged_data = massage_data(wdata)
+	
+	// get the min and max setpoints (stop or slow)
+	var max_sp_stop = null;
+	var max_sp_slow = null;
+	if(stop_high_exists && widget_data[stop_high_key].length){
+		max_sp_stop = _.max(widget_data[stop_high_key], function(d){return d[VAL_IDX]})[VAL_IDX]
+	}
+	if(slow_high_exists && widget_data[slow_high_key].length){		
+		max_sp_slow = _.max(widget_data[slow_high_key], function(d){return d[VAL_IDX]})[VAL_IDX]
+	}
+	var min_sp_stop = null
+	var min_sp_slow = null
+	if(stop_low_exists && widget_data[stop_low_key].length){
+		min_sp_stop = _.min(widget_data[stop_low_key], function(d){return d[VAL_IDX]})[VAL_IDX]
+	}
+	if(slow_low_exists && widget_data[slow_low_key].length){
+		min_sp_slow = _.min(widget_data[slow_low_key], function(d){return d[VAL_IDX]})[VAL_IDX]
+	}
+	
+	var vals_x = _.map(widget_data[series_key], function(s){return s[TIME_IDX]});
+	var vals_y = _.map(widget_data[series_key], function(s){return s[VAL_IDX]});
+	var reg_slope = ls_regression_slope(vals_x, vals_y);
+	
+	var triangle_location = trend_direction(reg_slope)
+	var triangle_exists = triangle_location != 0
+	
+	init_scales(square_left, triangle_location, half_height, widget_data)
+	
+	// update the triangle
+	trend_ctxt.triangle.top(function(){
+			var ret = 0
+			if(triangle_exists){
+				ret = triangle_location == 1 ? half_height/2 : h - half_height/2;
+			}
+			return ret
+		})
+		.fillStyle(function(){
+			var last_value = vals_y[vals_y.length-1]
+			if(max_sp_stop && min_sp_stop){
+				if(max_sp_slow && min_sp_slow){
+					return (last_value < max_sp_slow && last_value > min_sp_slow) ? 
+						'blue' : 
+						((last_value < max_sp_stop && last_value > max_sp_slow) || (last_value > min_sp_stop && last_value < min_sp_slow)) ? 'orange' : 'red'	
+				}
+				else{
+					return (last_value < max_sp_stop && last_value > min_sp_stop) ? 'blue' : 'red'
+				}
+			}
+			else if(max_sp_slow && min_sp_slow){
+				return (last_value < max_sp_slow && last_value > min_sp_slow) ? 'blue' : 'red'
+			}
+		})
+		.angle(function(){
+			var ret = 0;
+			if(triangle_exists){
+				ret = triangle_location == 1 ? Math.PI: 0;
+			}
+			return ret;
+		})
+		.visible(function(){
+			return triangle_exists
+		})
+		
+	// update the square
+	trend_ctxt.square.left(function(){
+			return square_left
+		})
+		.top(function(){
+			return get_square_top(triangle_location, half_height)
+		})
+		.fillStyle(function(){
+			var last_value = vals_y[vals_y.length-1]
+			if(!triangle_exists){
+				return 'black'
+			}
+			else{
+				if(max_sp_stop && min_sp_stop){
+					if(max_sp_slow && min_sp_slow){
+						return (last_value < max_sp_slow && last_value > min_sp_slow) ? 
+							'blue' : 
+							((last_value < max_sp_stop && last_value > max_sp_slow) || (last_value > min_sp_stop && last_value < min_sp_slow)) ? 'orange' : 'red'	
+					}
+					else{
+						return (last_value < max_sp_stop && last_value > min_sp_stop) ? 'blue' : 'red'
+					}
+				}
+				else if(max_sp_slow && min_sp_slow){
+					return (last_value < max_sp_slow && last_value > min_sp_slow) ? 'blue' : 'red'
+				}
+			}
+		})
+		
+	// update the graph line
+	trend_ctxt.graph_line.data(function(){
+//			return widget_data[series_key]
+			return massaged_data
+		})
+		.left(function(d){
+			return x_scale(d[TIME_IDX])
+		})
+		.top(function(d){
+			return y_scale(d[VAL_IDX])
+		})
+		
+	// render the vis
+	trend_ctxt.vis.render()
 }
 
 // this view is interested in showing the last 5 minutes

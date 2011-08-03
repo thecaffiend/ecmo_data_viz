@@ -5,6 +5,7 @@
 {% block extrastyle %}
 {% endblock %}
 {% block extrahead %}
+   	<script type="text/javascript" src="/static/js/test_data/ecmo_main_data.js"></script>
    	<script type="text/javascript" src="/static/js/lib/json/json2.js"></script>
 	<script type="text/javascript" src="/static/js/lib/jquery.websocket-0.0.1.js"></script>
 	<script type="text/javascript" src="/static/js/sock_util.js"></script>
@@ -14,47 +15,6 @@
 {% endblock %}
 {% block content %}
 <script type="text/javascript">
-
-// stuff from titan pad
-
-// $(document).ready(function(){
-    // $.get('/page/pumpside', function(conf){
-        // $.each(conf, function(idx, wc){
-            // var container = $('#'+wc.container),
-                // widget = $('<div/>',{
-                    // id: wc.div_id,
-                    // 'class': 'widget'
-                // })
-                // // loop over (title, trend, main)
-                // $.each(['title', 'trend', 'main'], function(idx, div_type){
-                    // $(widget).append($('<div/>',{
-                        // id: wc.div_id + '_' + div_type,
-                        // 'class': div_type
-                    // })
-                    // // generate the protovis pieces for (title, trend, main)
-                    // $.data(widget, 'pvs')[div] = widget_thing(div_type, wc.div_id + '_' + div_type)
-                // })
-//                 
-            // $.data(widget, 'series', [])
-//             
-            // var socket = $.websocket("ws://127.0.0.1:8080/", {
-                // events: {
-                    // message: function(e) {
-                        // $.each(wc.series, function(idx, series){
-                            // for(b=0;b<series.length;b++){
-                                // $.data(widget, 'series')[idx].push(series[b])
-                            // }
-                        // })
-                        // //redraw
-//                         
-                    // }
-                // }
-            // });
-        // })
-//         
-    // })
-// })
-
 // JSON format for configurations (list of widget conf's):
 // [{
 //	 container: '', // one of T,L,R,B (top, left, right, bottom)
@@ -65,56 +25,6 @@
 //   unit: '',         // the unit of the masurand (e.g. mmHG, %, etc)
 //   symbol: '',       // Single letter symbol for the type of measurand (e.g. P for pressure)
 // },]
-
-// only for testing. remove after all working
-var test_configs = [
-	{
-		"container": "T",
-		"pos": "1",
-		"series": ["measurement"],
-		"div_id": "premem_pressure",
-		"label":"Pre-Membrane Pressure",
-		"unit":"mmHG",
-		"symbol":"P",
-		
-	},
-	{
-		"container": "T",
-		"pos": "2",
-		"series": ["orders", "measurement"],
-		"div_id": "postmem_pressure",
-		"label":"Post-Membrane Pressure",
-		"unit":"mmHG",
-		"symbol":"P",
-	},
-	{
-		"container": "B",
-		"pos": "1",
-		"series": ["set_low_slow", "set_high_slow","set_low_stop", "set_high_stop","measurement"],
-		"div_id": "water_temp",
-		"label":"Water Temperature",
-		"unit":"°C",
-		"symbol":"T",
-	},
-	{
-		"container": "L",
-		"pos": "1",
-		"series": ["orders","measurement"],
-		"div_id": "svo2",
-		"label":"SVO2",
-		"unit":"%",
-		"symbol":"S",
-	},
-	{
-		"container": "R",
-		"pos": "1",
-		"series": ["orders","measurement"],
-		"div_id": "sao2",
-		"label":"SAO2",
-		"unit":"%",
-		"symbol":"S",
-	},
-]
 
 // JSON format for series (list of series...must be in the right order):
 // [
@@ -151,53 +61,6 @@ const VAL_IDX = 1;
 
 var sock;
 
-var test_series = {
-	"premem_pressure": {
-		"premem_pressure_slow_high": _.map(_.range(3600), function(i){return [i, 220]}),
-		"premem_pressure_slow_low": _.map(_.range(3600), function(i){return [i, 170]}),
-		"premem_pressure_stop_high": _.map(_.range(3600), function(i){return [i, 230]}),
-		"premem_pressure_stop_low": _.map(_.range(3600), function(i){return [i, 160]}),
-		"premem_pressure_series": _.map(_.range(3600), function(i){return [i, get_random(160, 230)]}),
-		"premem_pressure_order": _.map(_.range(3600), function(i){return [i, 200]}),
-	},
-	"postmem_pressure": {
-		"postmem_pressure_slow_high": _.map(_.range(3600), function(i){return [i, 220]}),
-		"postmem_pressure_slow_low": _.map(_.range(3600), function(i){return [i, 170]}),
-		"postmem_pressure_stop_high": _.map(_.range(3600), function(i){return [i, 230]}),
-		"postmem_pressure_stop_low": _.map(_.range(3600), function(i){return [i, 160]}),
-		"postmem_pressure_series": _.map(_.range(3600), function(i){return [i, get_random(160, 230)]}),
-		"postmem_pressure_order": _.map(_.range(3600), function(i){return [i, 200]}),
-	},
-	"water_temp": {
-		"water_temp_slow_high": _.map(_.range(3600), function(i){return [i, 38]}),
-		"water_temp_slow_low": _.map(_.range(3600), function(i){return [i, 35]}),
-		"water_temp_stop_high": _.map(_.range(3600), function(i){return [i, 39]}),
-		"water_temp_stop_low": _.map(_.range(3600), function(i){return [i, 34]}),
-		"water_temp_series": _.map(_.range(3600), function(i){return [i, get_random(34, 39)]}),
-		"water_temp_order": _.map(_.range(3600), function(i){return [i, 37]}),
-	},
-	"svo2": {
-		"svo2_slow_high": [[0, 220], [1, 220], [2, 220], [3, 220], [4, 220], [5, 220], [6, 220], [7, 220], [8, 220], [9, 220], [10, 220]],
-		"svo2_slow_low": [[0, 170], [1, 170], [2, 170], [3, 170], [4, 170], [5, 170], [6, 170], [7, 170], [8, 170], [9, 170], [10, 170]],
-		"svo2_stop_high": [[0, 230], [1, 230], [2, 230], [3, 230], [4, 230], [5, 230], [6, 230], [7, 230], [8, 230], [9, 230], [10, 230]],
-		"svo2_stop_low": [[0, 160], [1, 160], [2, 160], [3, 160], [4, 160], [5, 160], [6, 160], [7, 160], [8, 160], [9, 160], [10, 160]],
-		"svo2_series": [[0, get_random(160, 230)], [1, get_random(160, 230)], [2, get_random(160, 230)], [3, get_random(160, 230)], 
-				[4, get_random(160, 230)], [5, get_random(160, 230)], [6, get_random(160, 230)], [7, get_random(160, 230)], 
-				[8, get_random(160, 230)], [9, get_random(160, 230)], [10, get_random(160, 230)]],
-		"svo2_order": [[0, 200], [1, 200], [2, 200], [3, 200], [4, 200], [5, 200], [6, 200], [7, 200], [8, 200], [9, 200], [10, 200]],
-	},
-	"sao2": {
-		"sao2_slow_high": [[0, 220], [1, 220], [2, 220], [3, 220], [4, 220], [5, 220], [6, 220], [7, 220], [8, 220], [9, 220], [10, 220]],
-		"sao2_slow_low": [[0, 170], [1, 170], [2, 170], [3, 170], [4, 170], [5, 170], [6, 170], [7, 170], [8, 170], [9, 170], [10, 170]],
-		"sao2_stop_high": [[0, 230], [1, 230], [2, 230], [3, 230], [4, 230], [5, 230], [6, 230], [7, 230], [8, 230], [9, 230], [10, 230]],
-		"sao2_stop_low": [[0, 160], [1, 160], [2, 160], [3, 160], [4, 160], [5, 160], [6, 160], [7, 160], [8, 160], [9, 160], [10, 160]],
-		"sao2_series": [[0, get_random(160, 230)], [1, get_random(160, 230)], [2, get_random(160, 230)], [3, get_random(160, 230)], 
-				[4, get_random(160, 230)], [5, get_random(160, 230)], [6, get_random(160, 230)], [7, get_random(160, 230)], 
-				[8, get_random(160, 230)], [9, get_random(160, 230)], [10, get_random(160, 230)]],
-		"sao2_order": [[0, 200], [1, 200], [2, 200], [3, 200], [4, 200], [5, 200], [6, 200], [7, 200], [8, 200], [9, 200], [10, 200]],
-	},
-}
-
 // this value is needed per page (screen) that will request data from the server
 const SCREEN_NAME = "dashboard"	
 // this value is also needed per screen. this should be selectable by the user at some point.
@@ -208,6 +71,9 @@ const BACKFILL_MIN = 100;
 
 const CONF_KEY = "conf";
 const FEED_DATA_KEY = "feed_data";
+const WIDGET_GRAPH_CTXT = "graph_ctxt";
+const WIDGET_TREND_CTXT = "trend_ctxt";
+const WIDGET_LABEL_CTXT = "label_ctxt";
 
 var configs_url = "/ecmo/widget_confs/json";
 //var configs_url = "/ecmo/widget_confs/" + SCREEN_NAME + "/" + RUN_ID + "/json";
@@ -219,8 +85,7 @@ var backfill = null;
 function init_sockets(){
     sock = new WebSocket("ws://"+location.host+"/ecmo/screen/" + SCREEN_NAME + "/" + RUN_ID + "/socket");
     sock.onmessage = function(e){data_update_handler(JSON.parse(e.data))};
-    sock.onopen = function(e){console.log(e)};
-    
+//    sock.onopen = function(e){console.log(e)};
 }
 
 function create_widget_div(conf, init_data){
@@ -251,26 +116,39 @@ function render_widget(id){
 	var cdata = widget.data(CONF_KEY)
 	var fdata = widget.data(FEED_DATA_KEY)
 	
-	render_widget_graph(id+"-graph", cdata, fdata);
-	render_widget_trend(id+"-trend", cdata, fdata);
-	render_widget_label(id+"-label", cdata, fdata)
+	var pvs_graph_context = render_widget_graph(id+"-graph", cdata, fdata);
+	var pvs_trend_context = render_widget_trend(id+"-trend", cdata, fdata);
+	var pvs_label_context = render_widget_label(id+"-label", cdata, fdata);
+	
+	widget.data(WIDGET_GRAPH_CTXT, pvs_graph_context)
+	widget.data(WIDGET_TREND_CTXT, pvs_trend_context)
+	widget.data(WIDGET_LABEL_CTXT, pvs_label_context)
 }
 
+function update_widget(id){
+	var widget = $("#"+id)
+	var cdata = widget.data(CONF_KEY)
+	var fdata = widget.data(FEED_DATA_KEY)
+	
+	var graph_ctxt = widget.data(WIDGET_GRAPH_CTXT)
+	var trend_ctxt = widget.data(WIDGET_TREND_CTXT)
+	var label_ctxt = widget.data(WIDGET_LABEL_CTXT)
+	
+	update_widget_graph(id+"-graph", cdata, fdata, graph_ctxt);
+	update_widget_trend(id+"-trend", cdata, fdata, trend_ctxt);
+	update_widget_label(id+"-label", cdata, fdata, label_ctxt)
+}
+
+
 function data_update_handler(new_data){
-	console.log(new_data)
 	_.each(new_data, function(data_dict, base_div_id){
 		// get all divs starting with the base of class widget
-		var divs = $('div[id^="premem_pressure"]:[class~="widget"]')
+		var divs = $('div[id^="' + base_div_id + '"]:[class~="widget"]')
 		_.each(divs, function(d, idx){
 			_.each(data_dict, function(feed_data, feed_key){
 				if($(d).data(FEED_DATA_KEY).hasOwnProperty(feed_key)){
-					console.log('feed len before', $(d).data(FEED_DATA_KEY)[feed_key].length)
-					console.log(new_data[base_div_id][feed_key])
-					var new_arr = $(d).data(FEED_DATA_KEY)[feed_key].concat(new_data[base_div_id][feed_key])
-					console.log("new_arr len", new_arr.length)
-					// data not getting re-written right. new_arr is correct
-					$(d).data(FEED_DATA_KEY[feed_key], new_arr)
-					console.log('feed_after', $(d).data(FEED_DATA_KEY)[feed_key].length)
+					$(d).data(FEED_DATA_KEY)[feed_key] = $(d).data(FEED_DATA_KEY)[feed_key].concat(new_data[base_div_id][feed_key])
+					update_widget($(d).attr("id"))
 				}
 			})
 						

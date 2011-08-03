@@ -36,9 +36,8 @@ function render_widget_label(div_id, widget_conf, widget_data){
 		.left(w/4)
 		.font("16px Verdana bold")
 	
-	vis.add(pv.Label)
+	var curr_val_label = vis.add(pv.Label)
 		.text(function(){
-//			return ""+widget_data[SERIES_IDX][widget_data[SERIES_IDX].length-1][VAL_IDX]
 			var wd_key = widget_conf.div_id + SERIES_SFX;
 			var str = ""+widget_data[wd_key][widget_data[wd_key].length-1][VAL_IDX]
 			// only display 6 chars
@@ -51,5 +50,26 @@ function render_widget_label(div_id, widget_conf, widget_data){
 	
 		
 	vis.render()
+	
+	var label_ctxt = {
+		"vis": vis,
+		"label": curr_val_label,
+	}
+	
+	return label_ctxt
 }
 
+
+function update_widget_label(div_id, widget_conf, widget_data, label_ctxt){
+	var h = $("#"+div_id).height()
+	var w = $("#"+div_id).width()
+	
+	label_ctxt.label.text(function(){
+			var wd_key = widget_conf.div_id + SERIES_SFX;
+			var str = ""+widget_data[wd_key][widget_data[wd_key].length-1][VAL_IDX]
+			return str.slice(0,6)
+		})
+	
+		
+	label_ctxt.vis.render()
+}
