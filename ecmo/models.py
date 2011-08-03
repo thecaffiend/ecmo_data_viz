@@ -57,6 +57,7 @@ class Feed(models.Model):
     
     class Meta:
         unique_together = ('feed_type', 'run')
+        ordering = ['feed_type__label']
     
     def __unicode__(self):
         return '%s: %s' % (self.run, self.feed_type)
@@ -107,6 +108,7 @@ class FeedEvent(models.Model):
     
     class Meta:
         unique_together = ('feed', 'run_time')
+        ordering = ['run_time']
     
     def __unicode__(self):
         return u'%s: %s' % (self.feed, self.run_time)
@@ -154,6 +156,7 @@ class FeedPoint(models.Model):
     
     class Meta:
         unique_together = ('feed', 'run_time')
+        ordering = ['run_time']
     
     @property
     def msg(self):
@@ -258,6 +261,7 @@ class Widget(models.Model):
     
     class Meta:
         unique_together = ('screen', 'region', 'position')
+        ordering = ['position']
 
 #ew.
 from django.conf import settings

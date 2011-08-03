@@ -2,15 +2,22 @@ table input{
   width: 40px;
 }
 
-.feed{
+fieldset{
   float:left;
   padding: 5px;
   border: solid 1px #999;
   margin: 5px;
+}
+.time{
+  float:none;
 }
 
 .current{
   border:none;
   font-size: 200%;
   width: 100px;
+}
+
+.events{
+  display:none;
 }

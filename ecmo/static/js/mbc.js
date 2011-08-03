@@ -7,11 +7,23 @@ var tick;
 const RESUME = 0;
 const SET = 1;
 const PAUSE = 2;
+const SHUTDOWN = 4;
+
+var show_events = false;
 
 $(function(){
     var msg;
     
-    init_sockets();
+    $('#connection').click(function(){
+        if(!clock){
+            console.log('attempting to connect')
+            init_sockets();
+        }else{
+            close_sockets();
+        }
+    })
+    
+    $('.clock_dependent, .cmd_dependent').attr('disabled', true);
     
     $('#toggle_running').click(function(){
         running = !running;
@@ -48,29 +60,73 @@ $(function(){
             });
     });
     
-    $(window).bind("beforeunload", function(){
-      clock.close()
-      cmd.close()  
+    $('.toggle_events').click(function(){
+        $(this).parent().find('.events').slideToggle()
     })
+    $('.toggle_all_events').click(function(){
+        show_events = !show_events;
+        if(show_events){
+            $('.events').slideDown()
+        }else{
+            $('.events').slideUp()
+        }
+    })
+    
+    $(window).bind("beforeunload", function(){
+      close_sockets();
+    })
+    
     
 });
 
+function close_sockets(){
+    var sd = {'shutdown': 1}
+    send(clock, sd);
+    send(cmd, sd);
+}
+
 
 function init_sockets(){
+    clock = null;
     clock = new WebSocket(ws_uri('clock'));
     clock.onmessage = function(e){on_tick(JSON.parse(e.data))};
     
+    clock.onopen = function(){
+        console.log('foo')
+        $('#connection').text('Disconnect')
+        $('.clock_dependent').attr('disabled',false)
+    }
+    
+    clock.onclose = function(){
+        $('#connection').text('Refresh to reconnect').attr('disabled', true)
+        $('.clock_dependent').attr('disabled',true)
+    }
+    
+    cmd = null;
     cmd = new WebSocket(ws_uri('command'));
     cmd.onmessage = function(e){on_command(JSON.parse(e.data))};
+    
+    cmd.onopen = function(){
+        $('.cmd_dependent').attr('disabled',false)
+    }
+    cmd.onclose = function(){
+        $('.cmd_dependent').attr('disabled',true)
+    }
 }
 
 
 function on_tick(msg){
+    if(msg.shutdown){
+        clock.close()
+    }
     tick = msg.run_time;
     $('#run_time').val(tick);
 }
 
 function on_command(msg){
+    if(msg.shutdown){
+        cmd.close()
+    }
     if(msg.events && msg.events.length){
         $.each(msg.events, function(idx, evt){
             $( "#eventTemplate" ).tmpl( evt )

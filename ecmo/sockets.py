@@ -75,6 +75,7 @@ def mbc_command(request, run_id):
         if ws.has_messages():
             msg = ws.read()
             msg = simplejson.loads(msg)
+            if msg.get('shutdown', False): return
             if msg.get('delete', False):
                 try:
                     FeedEvent.objects.get(id=msg['delete']).delete()
@@ -124,6 +125,7 @@ def mbc_clock(request, run_id):
     for msg in ws:
         interrupted = False
         msg = simplejson.loads(msg)
+        if msg.get('shutdown', False): return
         if msg['type'] == CLK_RESUME:
             # initialize wake time for outer loop
             wake_time = time.time()
@@ -131,6 +133,7 @@ def mbc_clock(request, run_id):
                 if ws.has_messages():
                     # on pause or set, special stuff
                     interrupt = simplejson.loads(ws.read())
+                    if interrupt.get('shutdown', False): return
                     if interrupt["type"] == CLK_PAUSE:
                         msg_time()
                         # sends back to outer loop

@@ -4,20 +4,21 @@
 
 {% block breadcrumbs %}
     <div class="breadcrumbs">
-        <strong><a href="/admin/ecmo/run/{{run.id}}">{{run}}</a></strong>
-        <a href="." style="float:right;">All Runs</a>
+    <a href="." style="float:right;">All Runs</a>
+        <h1><a href="/admin/ecmo/run/{{run.id}}">{{run}}</a><button id="connection">Connect</button></h1>
     </div>
 {% endblock %}
 {% block content %}
     <input type="hidden" id="run_id" value="{{run.id}}"/>
-    <p>
-        <label for="run_time">Run Time</label>
+    <fieldset class="time">
+        <legend>Run Time</legend>
+        <button id="toggle_running" class="clock_dependent">Resume</button>
         <input id="run_time" disabled="disabled" value="{{run.run_time}}" class="current"/>
-        <button id="toggle_running">Resume</button>
         <br/>
+        <button id="set_time" class="clock_dependent">Set Time</button>
         <input id="run_time_set"/>
-        <button id="set_time">Set Time</button>
-    </p>
+    </fieldset>    
+        <button class="toggle_all_events">Hide/Show all Events</button>
     {% for feed in run.feed_set.all %}
     <fieldset class="feed" id="{{feed.feed_type.js_name}}">
         <legend><a href="/admin/ecmo/feed/{{feed.id}}">{{feed.feed_type.label}}</a></legend>
@@ -25,6 +26,7 @@
             <label for="feed-{{feed.feed_type.js_name}}">Current</label>
             <input id="feed-{{feed.feed_type.js_name}}" disabled="disabled" class="current"/>
         </p>
+        <div class="events">
         <table>
             <thead><tr>
                 <th>Do</th>
@@ -36,7 +38,7 @@
             </tr></thead>
             <tbody>
                 <tr class="event">
-                    <td><button class="add">+</button></td>
+                    <td><button class="add cmd_dependent">+</button></td>
                     <td><input class="run_time"/></td>
                     <td><select class="dist">
                         {% for evtt, evtt_label in event_types.items %}
@@ -54,7 +56,7 @@
                 </tr>
                 {% for evt in feed.feedevent_set.all %}
                 <tr class="event" id="event-{{evt.id}}">
-                    <td><button class="remove">-</button></td>
+                    <td><button class="remove cmd_dependent">-</button></td>
                     <td class="sort">{{evt.run_time}}</td>
                     <td>{{evt.distribution}}</td>
                     <td>{{evt.value}}</td>
@@ -64,6 +66,8 @@
                 {% endfor %}
             </tbody>
         </table>
+        </div>
+        <button class="toggle_events">Hide/Show Events</button>
     </fieldset>
     {% endfor %}
     <script id="eventTemplate" type="text/x-jquery-tmpl">
