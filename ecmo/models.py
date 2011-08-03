@@ -32,7 +32,7 @@ class Run(models.Model):
                 point.save()
             points.append(point)
         return points
-
+    
     @property
     def raw_points_key(self):
         return 'points-%s' % self.id
@@ -57,7 +57,7 @@ class Feed(models.Model):
     
     class Meta:
         unique_together = ('feed_type', 'run')
-        
+    
     def __unicode__(self):
         return '%s: %s' % (self.run, self.feed_type)
     
@@ -73,7 +73,7 @@ class Feed(models.Model):
         except:
             pass
         return tuple(result)
-            
+
 
 DIST_SET = 'SET'
 DIST_NRM = 'NRM'
@@ -110,17 +110,17 @@ class FeedEvent(models.Model):
     
     def __unicode__(self):
         return u'%s: %s' % (self.feed, self.run_time)
-
+    
     @property
     def msg(self):
         dct = dict([(k,v) for k,v in self.__dict__.items() if k[0] != '_'])
         dct['feed'] = self.feed.feed_type.js_name
         return dct
-        
+    
     def save(self, *args, **kwargs):
         super(FeedEvent, self).save(*args, **kwargs) # Call the "real" save() method.
         self.feed.feedpoint_set.filter(run_time__gte=self.run_time).delete()
-            
+    
     def generate_value(self, run_time, trend_event=None):
         
         to_dist = {
@@ -135,15 +135,14 @@ class FeedEvent(models.Model):
             for par in to_dist:
                 to_dist[par] = interp[self.trend](
                     self.run_time,
-                    getattr(self, par), 
+                    getattr(self, par),
                     trend_event.run_time,
                     getattr(trend_event, par)
                 )
-        
         dists = {
             DIST_SET: lambda value, a: value,
             DIST_NRM: lambda mu, sigma: random.normal(mu, sigma),
-            DIST_UNI: lambda min_v, max_v: random.uniform(min_v, max_v) 
+            DIST_UNI: lambda min_v, max_v: random.uniform(min_v, max_v)
         }
         return dists[self.distribution](*to_dist.values())
 
@@ -197,7 +196,7 @@ class Screen(models.Model):
         point_ss_map = {}
         
         used_widgets = dict([(w.widget_type.js_name, w.widget_type) for w in self.widget_set.all()])
-
+        
         for wt_js, wt in used_widgets.items():
             for wser in wt.widgetseries_set.all():
                 ss_base.setdefault(wt_js, {})[wser.js_name] = []
@@ -230,7 +229,7 @@ class WidgetType(models.Model):
     
     def __unicode__(self):
         return "%s: %s" % (self.label, self.unit)
-    
+
 
 class WidgetSeries(models.Model):
     """
@@ -243,7 +242,7 @@ class WidgetSeries(models.Model):
     
     class Meta:
         unique_together = ('widget_type', 'js_name')
-
+    
     def __unicode__(self):
         return "%s: %s" % (self.widget_type, self.feed_type)
 

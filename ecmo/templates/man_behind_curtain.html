@@ -12,18 +12,18 @@
     <input type="hidden" id="run_id" value="{{run.id}}"/>
     <p>
         <label for="run_time">Run Time</label>
-        <input id="run_time" disabled="disabled" value="{{run.run_time}}"/>
+        <input id="run_time" disabled="disabled" value="{{run.run_time}}" class="current"/>
         <button id="toggle_running">Resume</button>
         <br/>
         <input id="run_time_set"/>
-        <button id="set_time">Set</button>
+        <button id="set_time">Set Time</button>
     </p>
     {% for feed in run.feed_set.all %}
     <fieldset class="feed" id="{{feed.feed_type.js_name}}">
         <legend><a href="/admin/ecmo/feed/{{feed.id}}">{{feed.feed_type.label}}</a></legend>
         <p>
             <label for="feed-{{feed.feed_type.js_name}}">Current</label>
-            <input id="feed-{{feed.feed_type.js_name}}" disabled="disabled"/>
+            <input id="feed-{{feed.feed_type.js_name}}" disabled="disabled" class="current"/>
         </p>
         <table>
             <thead><tr>
