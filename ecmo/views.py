@@ -95,7 +95,7 @@ def generate_data(screen, run, min_back):
         except KeyError:
             # expected: not all data from a run will neccessarily be used in a screen
             pass
-        return screen_struct
+    return screen_struct
 
 def man_behind_curtain(request, run_id=None):
     ctxt = {'event_types': dict(EVT_DISTRIBUTIONS), 'trend_types': dict(EVT_TRENDS)}
