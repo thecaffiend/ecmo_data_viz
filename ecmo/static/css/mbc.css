@@ -6,4 +6,11 @@ table input{
   float:left;
   padding: 5px;
   border: solid 1px #999;
+  margin: 5px;
+}
+
+.current{
+  border:none;
+  font-size: 200%;
+  width: 100px;
 }

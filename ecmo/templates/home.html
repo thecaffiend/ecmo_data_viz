@@ -1,0 +1,20 @@
+{% extends 'admin/base.html' %}
+
+{% block title %}gtECMO 2011{% endblock %}
+
+{% block content %}
+<img src="{{ STATIC_URL }}img/logo.png" />
+<h1>gtECMO 2011</h1>
+<h2>Demos</h2>
+<ul style="font-size:200%;">
+    <li><a href="/ecmo/ecmo_viz">Pumpside Dashboard</a></li>
+    <li><a href="#">Long-term Trend Analysis</a></li>
+    <li><a href="#">Fleet Maintenance</a></li>
+</ul>
+
+<h2>Utilities</h2>
+<ul>
+    <li><a href="/admin">Administration Site</a></li>
+    <li><a href="/ecmo/man_behind_curtain">Experimenter View</a></li>
+</ul>
+{% endblock %}

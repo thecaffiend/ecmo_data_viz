@@ -48,6 +48,11 @@ $(function(){
             });
     });
     
+    $(window).bind("beforeunload", function(){
+      clock.close()
+      cmd.close()  
+    })
+    
 });
 
 
