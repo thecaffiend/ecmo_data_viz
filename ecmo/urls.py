@@ -10,6 +10,9 @@ urlpatterns = patterns('ecmo_data_viz.ecmo.views',
     (r'^pressure_graph/$', 'pressure_graph_view'),
     (r'^trend_symbol/$', 'trend_symbol_view'),
     
+    (r'^trend/$', 'trend_view'),
+    (r'^trend/data/(.*)$', 'trend_data'),
+    
     (r'^widget_confs/json/$', 'widget_confs_json'),
     
     (r'^screen/([^/]+)/(\d+)/socket$', 'screen_socket'),

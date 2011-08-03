@@ -1,0 +1,254 @@
+<html>
+  <head>
+    <title>ECMO Trends</title>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/lib/protovis.3.3.min.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/lib/jquery-1.6.2.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/lib/underscore-min.js"></script>
+    <style type="text/css">
+        body, html{
+            padding: 0;
+            margin: 0;
+        }
+        #fig {
+            width:auto;
+          height: 390px;
+        }
+        
+        #control{
+            width: 200px;
+            height: 100%;
+            background-color:#eee;
+            float:left;
+            padding:5px 0 0 5px;
+        }
+        h2{
+            padding:0;
+            margin:0;
+        }
+        
+        .feed{
+            -moz-border-radius: 5px 0px 0px 5px;
+            border-radius: 5px 0px 0px 5px;
+            background-color: #fff;
+            width: 100%;
+            height: 40px;
+            margin-bottom: 5px;
+            margin-right:-5px;
+        }
+        
+        .feed:hover{
+            border: #000;
+        }
+        
+        .feed label{
+            float:left;
+            width: 180px;
+            clear:both;
+            text-align:right;
+        }
+        
+        .feed input{
+            float:left;
+        }
+        
+        .run{
+            display:none;
+        }
+
+    </style>
+  </head>
+  <body>
+    <div id="control">
+    <h2>ECMO Trends</h2>
+    <select id="show_run">
+        <option>Select Run</option>
+        {% for run in runs %}
+        <option value="#run-{{run.id}}">{{run}}</option>
+        {% endfor %}
+    </select>
+    
+    <div id="runs">
+    {% for run in runs %}
+    <div class="run" id="run-{{run.id}}">
+        {% for feed in run.feed_set.all %}
+        <div class="feed">
+        <label>{{feed}}</label><input type="checkbox" class="feed_enabled" value="{{feed.id}}"/>
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+    </div>
+    
+    </div>
+    <div id="center"><div id="fig">
+    <div style="text-align:right;padding-right:20;">
+      <input checked id="scale" type="checkbox" onchange="vis.render()"
+      ><label for="scale">Scale to fit</label>
+    </div>
+<script type="text/javascript+protovis">
+var w, h1, h2, x, y, i, fx, fy, vis, focus, context, subcontext;
+
+var start = new Date(1990, 0, 1);
+var year = 1000 * 60 * 60 * 24 * 365;
+var data = [pv.range(0, 20, .02).map(function(x) {
+    return {x: new Date(start.getTime() + year * x),
+            y: (1 + .1 * (Math.sin(x * 2 * Math.PI))
+                + Math.random() * .1) * Math.pow(1.18, x)
+                + Math.random() * .1};
+  })];
+var end = data[data.length - 1].x;
+var ids;
+
+function refresh_vis(){
+    x = pv.Scale.linear(0, 1000).range(0, w);
+    y = {}
+    _.map(data, function(values, feed){
+        var y_min = pv.min(values, function(d) d.y),
+            y_max = pv.max(values, function(d) d.y);
+        y[feed] = pv.Scale.linear(y_min, y_max).range(0, h2);
+    })
+    vis.render()
+}
+
+$(function(){
+    $('#show_run').change(function(){
+        $('.run').hide()
+        $($(this).val()).slideDown()
+    })
+    
+    $(".feed_enabled").change(function(){
+        ids = _.map($('.feed_enabled:checked'), function(chk){
+            return parseInt($(chk).val())
+        })
+        $.get('/ecmo/trend/data/'+ids.join('/'), function(res){
+            data = res;
+            refresh_vis()
+        })
+    })
+/* Scales and sizing. */
+w = 810;
+h1 = 300;
+h2 = 30;
+x = pv.Scale.linear(start, end).range(0, w);
+y = {}
+y[0] = pv.Scale.linear(0, pv.max(data, function(d) d.y)).range(0, h2);
+
+/* Interaction state. Focus scales will have domain set on-render. */
+i = {x:200, dx:100};
+fx = pv.Scale.linear().range(0, w);
+fy = pv.Scale.linear().range(0, h1);
+
+/* Root panel. */
+vis = new pv.Panel()
+    .width(w)
+    .height(h1 + 20 + h2)
+    .bottom(20)
+    .left(30)
+    .right(20)
+    .top(5);
+
+/* Focus panel (zoomed in). */
+focus = vis.add(pv.Panel)
+    .data(function() pv.keys(data))
+    .def("init", function() {
+        return function(feed){
+            var d1 = x.invert(i.x),
+                d2 = x.invert(i.x + i.dx),
+                dd = data[feed].slice(
+                    Math.max(0, pv.search.index(data[feed], d1, function(d) d.x) - 1),
+                    pv.search.index(data[feed], d2, function(d) d.x) + 1);
+            fx.domain(d1, d2);
+            fy.domain(scale.checked ? [pv.min(dd, function(d) d.y), pv.max(dd, function(d) d.y)] : y.domain());
+            return dd;
+        
+        }
+      })
+    .top(0)
+    .height(h1);
+
+/* X-axis ticks. */
+focus.add(pv.Rule)
+    .data(function() fx.ticks())
+    .left(fx)
+    .strokeStyle("#eee")
+  .anchor("bottom").add(pv.Label)
+    .text(fx.tickFormat);
+
+/* Y-axis ticks. */
+focus.add(pv.Rule)
+    .data(function() fy.ticks(7))
+    .bottom(fy)
+    .strokeStyle(pv.Colors.category20().by(function(d, feed) feed))
+  .anchor("left").add(pv.Label)
+    .text(fy.tickFormat)
+    .textStyle(pv.Colors.category20().by(function(d, feed) feed));
+
+/* Focus area chart. */
+focus.add(pv.Panel)
+    .overflow("hidden")
+  .add(pv.Area)
+    //ooh... lambdas
+    .data(function(feed) focus.init()(feed))
+    .left(function(d) fx(d.x))
+    .bottom(1)
+    .height(function(d) fy(d.y))
+    .fillStyle(null)
+  .anchor("top").add(pv.Line)
+    .fillStyle(null)
+    .strokeStyle(pv.Colors.category20().by(function(d, feed) feed))
+    .lineWidth(2);
+
+
+/* Context panel (zoomed out). */
+context = vis.add(pv.Panel)
+    .bottom(0)
+    .height(h2);
+
+/* X-axis ticks. */
+context.add(pv.Rule)
+    .data(x.ticks())
+    .left(x)
+    .strokeStyle("#eee")
+  .anchor("bottom").add(pv.Label)
+    .text(x.tickFormat);
+
+/* Y-axis ticks. */
+context.add(pv.Rule)
+    .bottom(0);
+
+/* Context area chart. */
+subcontext = context.add(pv.Panel)
+    .data(function() pv.keys(data))
+
+subcontext.add(pv.Area)
+    .data(function(feed) data[feed])
+    .left(function(d) x(d.x))
+    .bottom(1)
+    .height(function(d, feed) y[feed](d.y))
+    .fillStyle(null)
+    .strokeStyle(pv.Colors.category20().by(function(d, feed) feed))
+  .anchor("top").add(pv.Line)  
+    .strokeStyle(pv.Colors.category20().by(function(d, feed) feed))
+    .lineWidth(2);
+
+/* The selectable, draggable focus region. */
+context.add(pv.Panel)
+    .data([i])
+    .cursor("crosshair")
+    .events("all")
+    .event("mousedown", pv.Behavior.select())
+    .event("select", focus)
+  .add(pv.Bar)
+    .left(function(d) d.x)
+    .width(function(d) d.dx)
+    .fillStyle("rgba(255, 128, 128, .4)")
+    .cursor("move")
+    .event("mousedown", pv.Behavior.drag())
+    .event("drag", focus);
+
+vis.render();
+
+})
+    </script>
+  </div></div></body>
+</html>
