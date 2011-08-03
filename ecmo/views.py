@@ -58,10 +58,6 @@ def generate_data(screen, run, min_back):
     # get the baseline structure and mapping from feed_type.js_name to (widget, series)
     screen_struct, point_ss_map = screen.struct_base_map()
     
-    
-    print screen_struct
-    print point_ss_map
-    
     for feed in run.feed_set.all():
         feed_js = feed.feed_type.js_name
         try:
