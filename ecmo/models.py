@@ -139,7 +139,6 @@ class FeedEvent(models.Model):
                     trend_event.run_time,
                     getattr(trend_event, par)
                 )
-        
         dists = {
             DIST_SET: lambda value, a: value,
             DIST_NRM: lambda mu, sigma: random.normal(mu, sigma),

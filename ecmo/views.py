@@ -44,15 +44,21 @@ def widget_confs_json(request):
     return JsonResponse(widget_confs)
 
 def screen_data(request, screen_name, run_id, min_back):
-    screen = Screen.objects.get(js_name=screen_name)
-    run = Run.objects.get(id=run_id)
-    min_back = int(min_back)
+    screen = Screen.objects.select_related().get(js_name=screen_name)
+    run = Run.objects.select_related().get(id=run_id)
     
+    screen_struct = generate_data(screen, run, int(min_back))
+    
+    return JsonResponse(screen_struct)
+
+def generate_data(screen, run, min_back):
     # get the baseline structure and mapping from feed_type.js_name to (widget, series)
     screen_struct, point_ss_map = screen.struct_base_map()
     
     for feed in run.feed_set.all():
         feed_js = feed.feed_type.js_name
+        
+        events = list(feed.feedevent_set.order_by('run_time'))
         
         try:
             p_map = point_ss_map[feed_js]
@@ -62,25 +68,31 @@ def screen_data(request, screen_name, run_id, min_back):
                 last_point = points[-1].run_time
             except:
                 last_point = 0
+            
             # not enough... need to generate more
             if last_point < min_back:
                 for rt in range(last_point, min_back):
-                    next_event, trend_event = feed.next_event(rt)
+                    next_event = filter(lambda x: x.run_time <= rt, events)[-1]
+                    try:
+                        trend_event = filter(lambda x: x.run_time > rt, events)[0]
+                    except:
+                        trend_event = None
+                    # naive. slow
+                    # next_event, trend_event = feed.next_event(rt)
                     point = FeedPoint.generate(feed, rt, next_event, trend_event)
                     try:
-                        point.full_clean()
+                        # trying to recreate the problem... probably not a problem
+                        # point.full_clean()
                         point.save()
                         points.append(point)
                     except:
                         pass
-            
+                    
             screen_struct[p_map[0]][p_map[1]] = [[p.run_time, p.value] for p in points]
         except KeyError:
             # expected: not all data from a run will neccessarily be used in a screen
             pass
-    
-    return JsonResponse(screen_struct)
-
+        return screen_struct
 
 def man_behind_curtain(request, run_id=None):
     ctxt = {'event_types': dict(EVT_DISTRIBUTIONS), 'trend_types': dict(EVT_TRENDS)}
