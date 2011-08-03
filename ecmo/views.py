@@ -73,14 +73,14 @@ def screen_data(request, screen_name, run_id, min_back):
                         points.append(point)
                     except:
                         pass
-                    
+            
             screen_struct[p_map[0]][p_map[1]] = [[p.run_time, p.value] for p in points]
         except KeyError:
             # expected: not all data from a run will neccessarily be used in a screen
             pass
-                
-    return JsonResponse(screen_struct)
     
+    return JsonResponse(screen_struct)
+
 
 def man_behind_curtain(request, run_id=None):
     ctxt = {'event_types': dict(EVT_DISTRIBUTIONS), 'trend_types': dict(EVT_TRENDS)}
