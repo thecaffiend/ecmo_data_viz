@@ -80,13 +80,10 @@
     </div>
     
     </div>
-    <div id="center"><div id="fig">
-    <div style="text-align:right;padding-right:20;">
-      <input checked id="scale" type="checkbox" onchange="vis.render()"
-      ><label for="scale">Scale to fit</label>
-    </div>
+    <div id="center"><br/>
+        <div id="fig">
 <script type="text/javascript+protovis">
-var w, h1, h2, x, y, i, fx, fy, vis, focus, context, subcontext;
+var w, h1, h2, x, y, i, fx, fy, vis, focus, context, subcontext, subfocus;
 
 var start = new Date(1990, 0, 1);
 var year = 1000 * 60 * 60 * 24 * 365;
@@ -126,8 +123,8 @@ $(function(){
         })
     })
 /* Scales and sizing. */
-w = 810;
-h1 = 300;
+w = 1000;
+h1 = 500;
 h2 = 30;
 x = pv.Scale.linear(start, end).range(0, w);
 y = {}
@@ -149,7 +146,6 @@ vis = new pv.Panel()
 
 /* Focus panel (zoomed in). */
 focus = vis.add(pv.Panel)
-    .data(function() pv.keys(data))
     .def("init", function() {
         return function(feed){
             var d1 = x.invert(i.x),
@@ -158,7 +154,7 @@ focus = vis.add(pv.Panel)
                     Math.max(0, pv.search.index(data[feed], d1, function(d) d.x) - 1),
                     pv.search.index(data[feed], d2, function(d) d.x) + 1);
             fx.domain(d1, d2);
-            fy.domain(scale.checked ? [pv.min(dd, function(d) d.y), pv.max(dd, function(d) d.y)] : y.domain());
+            fy.domain([pv.min(dd, function(d) d.y), pv.max(dd, function(d) d.y)]);
             return dd;
         
         }
@@ -174,17 +170,22 @@ focus.add(pv.Rule)
   .anchor("bottom").add(pv.Label)
     .text(fx.tickFormat);
 
+
+/* Focus area chart. */
+subfocus = focus.add(pv.Panel)
+    .data(function() pv.keys(data))
+
+
 /* Y-axis ticks. */
-focus.add(pv.Rule)
+subfocus.add(pv.Rule)
     .data(function() fy.ticks(7))
     .bottom(fy)
     .strokeStyle(pv.Colors.category20().by(function(d, feed) feed))
   .anchor("left").add(pv.Label)
     .text(fy.tickFormat)
     .textStyle(pv.Colors.category20().by(function(d, feed) feed));
-
-/* Focus area chart. */
-focus.add(pv.Panel)
+    
+subfocus.add(pv.Panel)
     .overflow("hidden")
   .add(pv.Area)
     //ooh... lambdas
