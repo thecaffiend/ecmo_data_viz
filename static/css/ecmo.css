@@ -5,6 +5,14 @@
 	width: 300px;
 	float:left;
 	/*background-color: #FF0000;*/
+	/*padding:7px;*/
+	margin-right:5px;
+	margin-left:5px;
+	margin-top:3px;
+	margin-bottom:3px;
+	/*border: 1px;
+	border-color: #000;
+	border-style: solid;*/
 }
 
 .label{
@@ -46,9 +54,9 @@
 
 .widget_row{
 	width:1280px;
-	height:300px;
+	height:215px;
 	float:none;
-	background-color: #FF0000;
+	/*background-color: #FF0000;*/
 	overflow:hidden;
 }
 
@@ -56,13 +64,13 @@
 	width:320px;
 	height:424px;
 	float:left;
-	background-color: #00FF00;
+	/*background-color: #00FF00;*/
 }
 
 .widget_col_right{
 	width:320px;
 	height:424px;
-	background-color: #00FF00;
+	/*background-color: #00FF00;*/
 	float:left;
 	overflow:hidden;
 }
@@ -71,11 +79,14 @@
 	width:640px;
 	height:424px;
 	float:left;
-	background-color: #0000FF;
+	border: 5px;
+	border-color: #000;
+	border-style: solid;
+	/*background-color: #0000FF;*/
 }
 
 .systime{
-	color: #FFF;
+	color: #000;
 	font: 30px Verdana;
 	text-align: left;
 }
