@@ -214,11 +214,13 @@ class ScreenRegion(models.Model):
 
 WIDGET_SYMBOLS = (("P", "Pressure"),
                   ("S", "Saturation"),
-                  ("T", "Temperature"),)
+                  ("T", "Temperature"),
+                  ("F", "Flow"),)
 
 MEASURAND_UNITS = (("mmHG", "mm Mercury"),
                   ("oC", "Degrees Celsius"),
-                  ("%", "Percent"),)
+                  ("%", "Percent"),
+                  ("cc/m", "cc Per Minute"),)
 
 class WidgetType(models.Model):
     """
@@ -262,6 +264,9 @@ class Widget(models.Model):
     class Meta:
         unique_together = ('screen', 'region', 'position')
         ordering = ['position']
+        
+    def __unicode__(self):
+        return "%s: %s-%s" % (self.widget_type, self.region, self.position)
 
 #ew.
 from django.conf import settings
